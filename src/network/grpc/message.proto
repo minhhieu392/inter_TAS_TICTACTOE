@@ -1,0 +1,10 @@
+package system;
+syntax = "proto3";
+
+message message {
+    // header
+    int32 gameType = 1;
+    int32 type = 2;
+    //body
+    // uint32 timestamp = 3;
+}

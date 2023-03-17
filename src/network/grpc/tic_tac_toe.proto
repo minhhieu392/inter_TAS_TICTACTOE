@@ -1,0 +1,38 @@
+syntax = "proto3";
+package tic_tac_toe;
+
+message Player {
+  string id = 1;
+  string symbol = 2;
+  bool isTurn = 3;
+  int32 wins = 4;
+  int32 lost = 5;
+}
+
+enum GameState {
+  IN_PROGRESS = 0;
+  PLAYER_1_WIN = 1;
+  PLAYER_2_WIN = 2;
+  DRAW = 3;
+}
+
+message EndGame {
+    string  winnerId = 1;
+}
+
+message Action {
+  repeated Player player = 1;
+  string roomId = 2;
+  int32 to = 3;
+}
+
+message sendDataAction {
+ repeated Player players = 1;
+ int32 to = 3;
+}
+message sendWinStatus {
+  int32 type = 1;
+  string data = 2;
+}
+
+

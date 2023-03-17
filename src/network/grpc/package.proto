@@ -1,0 +1,205 @@
+syntax = "proto3";
+package hcGames;
+
+message PackageData {
+    uint32 header = 1;
+    bytes data = 2;
+}
+
+message FindingRoom {
+    string  userCodeId = 1;
+    int32   level = 2;
+    int32   gameType = 3;
+    int32   playType = 4;
+    int32   mmr = 5;
+    CCData  ccData = 6;
+}
+
+message FindingRoomResponse {
+    string roomId = 1;
+    string masterName = 2;
+    string otherPlayerName = 3;
+    int32 mode = 4;
+    int32 status = 5;
+    string message = 6;
+}
+
+message CreateRoom {
+    string  userCodeId = 1;
+    int32   level = 2;
+    int32   gameType = 3;
+    int32   playType = 4;
+    int32   mmr = 5;
+    CCData  ccData = 6;
+}
+
+message CCData {
+    uint64 miniGameEventId = 1;
+    uint64 waitingTimeId = 2;
+    string token = 3;
+    int32 gameMode = 4;
+    int32 numberInMiniGame = 5;
+    string groupRoomId = 6;
+    int32 round = 7;
+    string roomId = 8;
+}
+
+message CreateRoomResponse {
+    string roomId = 1;
+}
+
+message UpdateJoinRoom {
+    string nickname = 1;
+}
+
+message UpdateTurn {
+    string  userCodeId = 1;
+    int32 errorCode = 2;
+}
+
+message Ping {
+    uint32  index = 1;
+}
+
+message EndGame {
+    string  winnerId = 1;
+}
+
+message Verify {
+    string  userCodeId = 1;
+    int32   guid = 2;
+    string  ver = 3;
+}
+
+message AllGroupDie {
+    string  userCodeId = 1;
+}
+
+// =========
+
+message Shoot {
+  float power = 1;
+}
+
+message HCVector3 {
+  float x = 1;
+  float y = 2;
+  float z = 3; 
+}
+
+message HCQuaternion {
+  float x = 1;
+  float y = 2;
+  float z = 3;
+  float w = 4;
+}
+
+message NetworkObjectPhysicData {
+  int32 id = 1;
+  HCVector3 position = 2;
+  HCQuaternion rotation = 3;
+  HCVector3 velocity = 4;
+  HCVector3 angularVelocity = 5;
+}
+
+message NetworkPhysicsMessage {
+  int32 tick = 1;
+  repeated NetworkObjectPhysicData networkObjects = 2;
+}
+
+message UpdateBallDie {
+  int32 ballId = 1;
+}
+
+message BumperCollider {
+    NetworkObjectPhysicData ball = 1;
+}
+
+message BallCollider {
+  NetworkObjectPhysicData whiteBall = 1;
+  NetworkObjectPhysicData otherBall = 2;
+}
+
+message BallGroupType {
+  int32 ballGroupType = 1;
+}
+
+// ===
+message Card {
+  int32 number = 1;
+  int32 type = 2;
+}
+
+message CardData_Soli {
+  repeated Card remainCards = 1;
+  repeated Card colum1 = 2;
+  repeated Card colum2 = 3;
+  repeated Card colum3 = 4;
+  repeated Card colum4 = 5;
+  repeated Card colum5 = 6;
+  repeated Card colum6 = 7;
+  repeated Card colum7 = 8;
+}
+
+message UpdatePoint_Soli {
+  int32 point = 1;
+}
+
+message PointSolitaire {
+  int32 point = 1;
+}
+
+message EndGame_Soli {
+  uint64  winnerId = 1;
+}
+
+message timeOut {
+  bool  timeOut = 1;
+}
+
+// === Roulette action
+message RouletteAction {
+  int32 type = 1;
+}
+
+// === Roulette init
+message RouletteInit {
+  int32 type = 1;
+  int32 userId = 2;
+}
+
+// === Random box action
+message RandomBoxAction {
+  int32 type = 1;
+}
+
+// ==== Tetris action
+message TetrisAction {
+  int32 type = 1;
+}
+
+// ==== Puzzle action
+message PuzzleAction {
+  int32 type = 1;
+  int32 row = 2;
+  int32 col = 3;
+}
+
+// ==== Bubble shooter action
+message UpdatePoints {
+  int32 score = 1; // null
+}
+
+message BubbleShooterEndGame {
+  int32 score = 1;
+  int32 clearBoard = 2;
+  int32 timeBonus = 3;
+  int32 finalScores = 4;
+  int32 gameOverType = 5;
+}
+
+message UserInfo {
+  string token = 1;
+  string deviceId = 2;
+  string email = 3;
+}

@@ -1,0 +1,23 @@
+{
+    "compilerOptions": {
+        "outDir": "./dist",
+        "module": "commonjs",
+        "lib": ["es6"],
+        "target": "es2018",
+        "declaration": true,
+        "removeComments": true,
+        "noImplicitAny": false,
+        "experimentalDecorators": true,
+        "sourceMap": true,
+        "esModuleInterop": true,
+        "strict": true,
+        "allowJs": true,
+        "strictNullChecks": false,
+        "forceConsistentCasingInFileNames": true,
+        "baseUrl": "./src",
+        "moduleResolution": "node",
+        "typeRoots": ["src/server/types", "node_modules/@types"]
+    },
+    "include": ["src/**/*.ts", "src/network/test_client.js"],
+    "exclude": ["dist", "node_modules"]
+}
