@@ -34,7 +34,7 @@ export default class WSRouter {
      */
     public listeners = () => {
         this.socket.on("message", async (payload) => {
-            console.log('check', payload)
+
             const [error, message] = await catchAsync(
                 decodeMessage(payload, this.filePath_tmp, this.packageType_tnp)
             );
@@ -104,6 +104,7 @@ export default class WSRouter {
             const gameId: string =
                 Math.random().toString(36).substr(2, 9);
             rooms[gameId] = { roomId: gameId, ownerId: player.id, players: [player], board: board }
+            this.listenRooms(gameId)
             this.removeFromQueue(player);
             this.gameMain.sendMessage(player, this.filePath_tictactoe, "tic_tac_toe.Player", player, TICTACTOE_TYPE.PLAYER_X)
         }
@@ -111,11 +112,10 @@ export default class WSRouter {
             player.symbol = 'o'
             player.isTurn = false
             this.gameMain.sendMessage(player, this.filePath_tictactoe, "tic_tac_toe.Player", player, TICTACTOE_TYPE.PLAYER_O)
-
             const key = Object.keys(rooms)[0]
             rooms[key].players.push(player)
             const movetoGames = rooms[key]
-            delete rooms[key]
+            // delete rooms[key]
             games[key] = movetoGames
             const message: any = {
                 type: TICTACTOE_TYPE.PLAY_GAME,
@@ -170,5 +170,43 @@ export default class WSRouter {
         if (index !== -1) {
             this.queue.splice(index, 1);
         }
+    }
+
+    /**
+     * It checks if there are 2 players in the room, if there are, it clears the interval and deletes
+     * the room. If there is only 1 player, it sets a timeout to delete the room after 30 seconds. If a
+     * second player joins, it clears the timeout.
+     * 
+     * The problem is that the timeout is not being cleared. I've tried using a boolean to check if the
+     * timeout is set, but it doesn't seem to work.
+     * 
+     * I've also tried using a different method to clear the timeout, but it doesn't work either.
+     * @param {string} gameId - string - the id of the game
+     */
+    private listenRooms(gameId: string) {
+        const room = rooms[gameId];
+        let timeoutId: any;
+        let intervalId: any;
+        let isTimeoutSet = false;
+
+        const checkPlayers = () => {
+            if (room.players.length === 1 && !isTimeoutSet) {
+                timeoutId = setTimeout(() => {
+                    delete rooms[gameId];
+                    clearInterval(intervalId);
+                    isTimeoutSet = false;
+                }, 30000);
+                isTimeoutSet = true;
+            } else if (room.players.length === 2) {
+                if (isTimeoutSet) {
+                    clearTimeout(timeoutId);
+                    isTimeoutSet = false;
+                }
+                clearInterval(intervalId);
+                delete rooms[gameId];
+            }
+        };
+
+        intervalId = setInterval(checkPlayers, 1000);
     }
 }
