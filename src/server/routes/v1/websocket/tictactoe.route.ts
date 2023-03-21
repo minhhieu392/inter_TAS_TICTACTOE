@@ -2,21 +2,23 @@ import { WebSocket } from 'ws';
 import TictactoeController from '../../../controllers/tictactoe.controller';
 import logger from '../../../../config/logger';
 import { TICTACTOE_TYPE } from '../../../../utils/constants';
-import { Ledger } from 'server/models';
-import { LogService } from '../../../services';
 import { PayloadHandleEvent, DataAction } from '../../../../games/tictactoe/interface';
 
 class TictactoeRouter {
 
     private controller: TictactoeController;
-
     constructor(socket: WebSocket) {
         this.controller = new TictactoeController(socket);
     }
-
+    /**
+     * Description : router game tictactoe
+     * A function that is being assigned to the router property of the class.
+     * @param message 
+     * @returns 
+     */
     router = (message: { [k: string]: any }) => {
         try {
-            console.log('routermess', message)
+            console.log('routermess', message.to)
             const type = message.type;
             if (type === undefined) {
                 logger.warn(`[WARN][tictiactoe][Router] - router - Unsupported message type: `, message);
@@ -26,10 +28,7 @@ class TictactoeRouter {
             let dataPlay = undefined;
             let dataMove = undefined;
             if (type === TICTACTOE_TYPE.PLAY_GAME) {
-                const roomId = message.payload.roomId;
-                const ownerId = message.payload.ownerId;
-                const players = message.payload.players;
-                const board = message.payload.board;
+                const { roomId, ownerId, players, board } = message.payload
                 dataPlay = {
                     roomId,
                     ownerId,
@@ -38,9 +37,7 @@ class TictactoeRouter {
                 }
             }
             if (type === TICTACTOE_TYPE.ACTION) {
-                const roomId = message.payload.roomId;
-                const player = message.payload.player;
-                const to = message.payload.to;
+                const { roomId, player, to } = message
                 dataMove = {
                     roomId,
                     player,

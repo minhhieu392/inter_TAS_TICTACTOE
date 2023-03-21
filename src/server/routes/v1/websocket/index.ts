@@ -10,33 +10,17 @@ import {
 } from "../../../../utils/constants";
 import { clients } from "../../../../config/websocket"
 import TictactoeRouter from "./tictactoe.route"
-interface Player {
-    id: string;
-    symbol: string;
-    isTurn: boolean;
-    wins: number,
-    lost: Number
-}
+import { Room, Player } from '../../../../games/tictactoe/interface';
 
-interface Room {
-    [roomId: string]: {
-        roomId: string,
-        ownerId: string,
-        players: Player[];
-        board: string[]
-    }
-}
+export const board: string[] = BOARD
 export const games: Room = {}
+export const rooms: Room = {};
 
 export default class WSRouter {
-    private rooms: Room = {};
     private queue: Player[] = []
-
-    // private games: Room;
     private socket: WebSocket;
     private tictactoeRouter: TictactoeRouter;
     private readonly filePath_tmp = "src/network/grpc/package.proto";
-    private readonly filePath_solitaire = "src/network/grpc/solitaire.proto";
     private readonly filePath_tictactoe = "src/network/grpc/tic_tac_toe.proto";
     private readonly packageType_tnp = "hcGames.PackageData";
 
@@ -44,32 +28,31 @@ export default class WSRouter {
         this.socket = socket;
         this.tictactoeRouter = new TictactoeRouter(socket)
     }
+    /**
+     * Description : This is a function that listens to the message sent by the client
+     */
     public listeners = () => {
-
         this.socket.on("message", async (payload) => {
-            // const payload: Buffer = Buffer.from('08ab4612210a120a076869657538383812017818012000280012096869657535363637371807', 'hex')
-            // const payload: Buffer = Buffer.from('080c1200', 'hex')
+            console.log('check', payload)
             const [error, message] = await catchAsync(
                 decodeMessage(payload, this.filePath_tmp, this.packageType_tnp)
             );
+
             if (!message || !message ?.header) {
                 logger.warn(`invalid message / header!`, message);
                 console.log(115, message);
                 return;
             }
-
             console.log(`\n Decoded mess json ${JSON.stringify(message)}`);
             if (message.header === PACKAGE_HEADER.DISCONNECTED) {
                 return;
             }
-
             this.handlersV2(
                 message.header,
                 message.data ? Buffer.from(message.data) : [],
                 payload
             );
         });
-
         this.socket.on("close", () => {
             logger.warn(`Client disconnected`);
         });
@@ -78,12 +61,20 @@ export default class WSRouter {
             logger.warn(`Client has error`);
         });
     };
-
+    /**
+     * @param header 
+     * @param payload 
+     * @param rawData 
+     */
     private handlersV2 = async (header: Number, payload: any, rawData: any) => {
         this.handlers(header, payload, rawData);
-        console.log('dataHandlers', header, payload, rawData)
     };
-
+    /**
+     * Description: This is a function that handles the header sent by the client
+     * @param header 
+     * @param payload 
+     * @param rawData 
+     */
     private handlers = async (header: Number, payload: any, rawData: any) => {
         const caseHeader = {
             [PACKAGE_HEADER.FINDING_ROOM_TICTICTOE]: () => this.findingRoom(),
@@ -96,24 +87,22 @@ export default class WSRouter {
         caseHeader[headerKey] ?.(payload) ?? logger.error("can not find headerKey", header);
 
     };
+
+    /**
+     * Description : The above code is finding a room for the player. If there is no room, it creates a room and
+     * sends the player to the room. If there is a room, it sends the player to the room. 
+     * create new user => add queue
+     * create new room
+     * join room
+     */
     private findingRoom = async () => {
-        let board: string[] = BOARD
-        const player: Player = { id: Math.random().toString(36).substring(2), symbol: 'x', isTurn: false, wins: 0, lost: 0 };
+        const player: Player = { id: Math.random().toString(36).substring(2), symbol: 'x', isTurn: true, wins: 0, lost: 0 };
         clients.set(player.id, this.socket);
-        console.log(`Player ${player.id} connected`)
         this.queue.push(player);
-        // this.rooms = {
-        //     '195': {
-        //         roomId: '195',
-        //         ownerId: 'hieuhieu',
-        //         players: [{ id: 'hieuhieu', symbol: 'x', isTurn: true, wins: 0, lost: 0 }],
-        //         board: board
-        //     }
-        // };
-        if (Object.keys(this.rooms).length <= 0) {
+        if (Object.keys(rooms).length <= 0) {
             const gameId: string =
                 Math.random().toString(36).substr(2, 9);
-            this.rooms[gameId] = { roomId: gameId, ownerId: player.id, players: [player], board: board }
+            rooms[gameId] = { roomId: gameId, ownerId: player.id, players: [player], board: board }
             this.removeFromQueue(player);
             const [errorDataEn, payloadDataEn] = await catchAsync(
                 encodeMessage(
@@ -122,14 +111,22 @@ export default class WSRouter {
                     "tic_tac_toe.Player"
                 )
             );
-            this.socket.send(payloadDataEn);
-            console.log('payloadDataEn', payloadDataEn)
-            console.log('rooms', this.rooms[gameId].players)
+            const dateSend = {
+                header: 30,
+                data: payloadDataEn
+            }
+            const [error, payloadEn] = await catchAsync(
+                encodeMessage(
+                    dateSend,
+                    this.filePath_tmp,
+                    this.packageType_tnp
+                )
+            );
+            this.socket.send(payloadEn);
         }
         else {
-
-
             player.symbol = 'o'
+            player.isTurn = false
             const [errorDataEn, payloadDataEn] = await catchAsync(
                 encodeMessage(
                     player,
@@ -137,20 +134,36 @@ export default class WSRouter {
                     "tic_tac_toe.Player"
                 )
             );
-            this.socket.send(payloadDataEn);
-            const key = Object.keys(this.rooms)[0]
-            this.rooms[key].players.push(player)
-            const movetoGames = this.rooms[key]
-            delete this.rooms[key]
+            const dateSend = {
+                header: 31,
+                data: payloadDataEn
+            }
+            const [error, payloadEn] = await catchAsync(
+                encodeMessage(
+                    dateSend,
+                    this.filePath_tmp,
+                    this.packageType_tnp
+                )
+            );
+            this.socket.send(payloadEn);
+            const key = Object.keys(rooms)[0]
+            rooms[key].players.push(player)
+            const movetoGames = rooms[key]
+            delete rooms[key]
             games[key] = movetoGames
             const message: any = {
                 type: TICTACTOE_TYPE.PLAY_GAME,
                 payload: movetoGames
             }
-
+            console.log('games', games)
             this.tictactoeRouter.router(message);
         }
     }
+    /**
+     * Description: handler moves
+     * This is a function that handles the player's move.
+     * @param payload 
+     */
     private tictactoeAction = async (payload: any) => {
         const [error2, dataAction] = await catchAsync(
             decodeMessage(
@@ -165,12 +178,14 @@ export default class WSRouter {
             roomId: dataAction.roomId,
             to: dataAction.to
         };
-        console.log('action game', games)
-        if (games.hasOwnProperty(payload.roomId) && this[payload.roomId] ?.players) {
+        if (games.hasOwnProperty(dataAction.roomId)) {
             this.tictactoeRouter.router(message);
         }
-        console.log('message', message)
     }
+    /**
+     * Description: handler end game
+     * This is a function that handles the end of the game
+     */
     private tictactoeEndGame = async () => {
         const message = {
             type: TICTACTOE_TYPE.END_GAME,
@@ -180,6 +195,10 @@ export default class WSRouter {
         this.tictactoeRouter.router(message);
     }
 
+    /**
+     * It removes a player from the queue.
+     * @param {Player} player - Player - The player to remove from the queue
+     */
     private removeFromQueue(player: Player) {
         const index = this.queue.indexOf(player);
         if (index !== -1) {

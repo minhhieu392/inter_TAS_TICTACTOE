@@ -21,18 +21,26 @@ message EndGame {
 }
 
 message Action {
-  repeated Player player = 1;
+  Player player = 1;
   string roomId = 2;
   int32 to = 3;
+  string symbol = 4;
 }
 
 message sendDataAction {
  repeated Player players = 1;
  int32 to = 3;
+ string symbol = 4;
 }
 message sendWinStatus {
   int32 type = 1;
   string data = 2;
+}
+message startGame {
+  string roomId = 1;
+  string ownerId = 2;
+  repeated Player players = 3;
+  repeated string board = 4 ;
 }
 
 

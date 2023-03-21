@@ -62,20 +62,27 @@ const decodeMessage = async (buffer, filePath, packageType) => {
 
 async function test() {
   // // Finding room
-  // const payloadData = {
-  //   userCodeId: '23f11630827f18e0781431534140465e_1677928900536',
-  //   ccData: {
-  //     miniGameEventId: 222,
-  //     token: 'create_token_c405a57714e888b441eefa2d8cf2b76b5c7285613d303ac8f2fb00499cc8941c',
-  //   }
-  // };
-  // const [errorDataEn, payloadDataEn] = await catchAsync(encodeMessage(payloadData, './grpc/package.proto', 'hcGames.FindingRoom'));
+  const payloadData = {};
+  const [errorDataEn, payloadDataEn] = await catchAsync(
+    encodeMessage(
+      payloadData,
+      "./src/network/grpc/package.proto",
+      "hcGames.FindingRoom"
+    )
+  );
 
-  // const payload = {
-  //   header: 1,
-  //   data: payloadDataEn
-  // }
-  // const [error, payloadEn] = await catchAsync(encodeMessage(payload, './grpc/package.proto', 'hcGames.PackageData'));
+  const payload = {
+    header: 1,
+    data: payloadDataEn,
+  };
+  const [error, payloadEn] = await catchAsync(
+    encodeMessage(
+      payload,
+      "./src/network/grpc/package.proto",
+      "hcGames.PackageData"
+    )
+  );
+  console.log("pay", payloadEn);
 
   // // Game puzzle
   // const payloadData = {
@@ -95,21 +102,26 @@ async function test() {
 
   // const str = "08 C4 3E 12 02 08 64";
   // const arr = str.split(" ").map((hex) => parseInt(hex, 16));
-  // const buf = Buffer.from(arr);
-  // const test = await catchAsync(
-  //   decodeMessage(buf, "./grpc/package.proto", "hcGames.PackageData")
+  const buf = Buffer.from("08011200", "hex");
+  // const buf = Buffer.from(
+  //   "7b2230223a382c2231223a312c2232223a31382c2233223a307d",
+  //   "hex"
   // );
-  // const data = "08 64";
-  // const arrData = data.split(" ").map((hex) => parseInt(hex, 16));
-  // const bufData = Buffer.from(arrData);
-  // const testData = await catchAsync(
-  //   decodeMessage(
-  //     bufData,
-  //     "./grpc/bubble_shooter.proto",
-  //     "BubbleShooter.UpdatePoints"
-  //   )
-  // );
-  // console.log(testData);
+  const test = await catchAsync(
+    decodeMessage(
+      buf,
+      "./src/network/grpc/package.proto",
+      "hcGames.PackageData"
+    )
+  );
+  // this.rooms = {
+  //     '195': {
+  //         roomId: '195',
+  //         ownerId: 'hieuhieu',
+  //         players: [{ id: 'hieuhieu', symbol: 'x', isTurn: true, wins: 0, lost: 0 }],
+  //         board: board
+  //     }
+  // };
 
   // Game bubble shooter
   // const payloadData = {
@@ -130,28 +142,28 @@ async function test() {
   // };
   // const [errorDataEn, payloadDataEn] = await catchAsync(encodeMessage(payloadData, './src/network/grpc/bonusgameplay.proto', 'BonusGamePlay.UserInfo'));
 
-  const payloadData = {};
+  // const payloadData = {};
 
-  const [errorDataEn, payloadDataEn] = await catchAsync(
-    encodeMessage(
-      payloadData,
-      "./src/network/grpc/tic_tac_toe.proto",
-      "tic_tac_toe.Player"
-    )
-  );
-  console.log("payloadDataEn", payloadDataEn);
-  const payload = {
-    header: 12,
-    data: payloadDataEn,
-  };
-  const [error, payloadEn] = await catchAsync(
-    encodeMessage(
-      payload,
-      "./src/network/grpc/package.proto",
-      "hcGames.PackageData"
-    )
-  );
-  console.log("payloadEn", payloadEn);
+  // const [errorDataEn, payloadDataEn] = await catchAsync(
+  //   encodeMessage(
+  //     payloadData,
+  //     "./src/network/grpc/tic_tac_toe.proto",
+  //     "tic_tac_toe.Player"
+  //   )
+  // );
+  // console.log("payloadDataEn", payloadDataEn);
+  // const payload = {
+  //   header: 12,
+  //   data: payloadDataEn,
+  // };
+  // const [error, payloadEn] = await catchAsync(
+  //   encodeMessage(
+  //     payload,
+  //     "./src/network/grpc/package.proto",
+  //     "hcGames.PackageData"
+  //   )
+  // );
+  // console.log("payloadEn", payloadEn);
   // const payloadData = {
   //   player: [
   //     {

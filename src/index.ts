@@ -6,12 +6,12 @@ import { clearUserFreeRouletteTurn } from './server/services/outgame/clearUserFr
 import RedisMatching from './config/redisMatching';
 
 const init = async () => {
-    await RedisClient.initializer();
-    await RedisMatching.initializer();
+    // await RedisClient.initializer();
+    // await RedisMatching.initializer();
     clearUserFreeRouletteTurn()
     const websocket = new Websocket();
     websocket.handlers();
-    await RedisClient.publish("bonus-game-server-start", { type: BONUS_GAME_DATA_REDIS_TYPE.ALL }); // lấy thông tin danh sách bonus game ngay khi tạo server
+    // await RedisClient.publish("bonus-game-server-start", { type: BONUS_GAME_DATA_REDIS_TYPE.ALL });
 }
 
 init();
