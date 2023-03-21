@@ -7,11 +7,14 @@ import catchAsync from "../../utils/catchAsync";
 import { Player } from '../../games/tictactoe/interface';
 import { encodeMessage, decodeMessage } from '../../utils/helpers';
 import { GAME_OVER_TYPE } from './config'
+import { WebSocket } from "ws";
+
 
 /* The class is a wrapper for a gRPC service. It has a method for each of the gRPC service's methods.
 The methods are called by the gRPC server. The methods call other methods in the class to do the
 actual work. The methods also call methods in the gRPC server to send responses to the client. */
 export class tictactoeGame {
+    private socket: WebSocket;
     private readonly filePath_tictactoe = "src/network/grpc/tic_tac_toe.proto";
     private readonly packageType_tnp = "hcGames.PackageData";
     private readonly filePath_tmp = "src/network/grpc/package.proto";

@@ -219,6 +219,8 @@ export enum TICTACTOE_TYPE {
     PLAY_GAME = 1,
     ACTION = 2,
     END_GAME = 5,
+    PLAYER_X = 30,
+    PLAYER_O = 31,
 }
 
 

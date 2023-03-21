@@ -11,12 +11,13 @@ import {
 import { clients } from "../../../../config/websocket"
 import TictactoeRouter from "./tictactoe.route"
 import { Room, Player } from '../../../../games/tictactoe/interface';
-
+import { tictactoeGame } from "../../../../games/tictactoe/tictactoeGame";
 export const board: string[] = BOARD
 export const games: Room = {}
 export const rooms: Room = {};
 
 export default class WSRouter {
+    private gameMain = new tictactoeGame()
     private queue: Player[] = []
     private socket: WebSocket;
     private tictactoeRouter: TictactoeRouter;
@@ -104,48 +105,13 @@ export default class WSRouter {
                 Math.random().toString(36).substr(2, 9);
             rooms[gameId] = { roomId: gameId, ownerId: player.id, players: [player], board: board }
             this.removeFromQueue(player);
-            const [errorDataEn, payloadDataEn] = await catchAsync(
-                encodeMessage(
-                    player,
-                    this.filePath_tictactoe,
-                    "tic_tac_toe.Player"
-                )
-            );
-            const dateSend = {
-                header: 30,
-                data: payloadDataEn
-            }
-            const [error, payloadEn] = await catchAsync(
-                encodeMessage(
-                    dateSend,
-                    this.filePath_tmp,
-                    this.packageType_tnp
-                )
-            );
-            this.socket.send(payloadEn);
+            this.gameMain.sendMessage(player, this.filePath_tictactoe, "tic_tac_toe.Player", player, TICTACTOE_TYPE.PLAYER_X)
         }
         else {
             player.symbol = 'o'
             player.isTurn = false
-            const [errorDataEn, payloadDataEn] = await catchAsync(
-                encodeMessage(
-                    player,
-                    this.filePath_tictactoe,
-                    "tic_tac_toe.Player"
-                )
-            );
-            const dateSend = {
-                header: 31,
-                data: payloadDataEn
-            }
-            const [error, payloadEn] = await catchAsync(
-                encodeMessage(
-                    dateSend,
-                    this.filePath_tmp,
-                    this.packageType_tnp
-                )
-            );
-            this.socket.send(payloadEn);
+            this.gameMain.sendMessage(player, this.filePath_tictactoe, "tic_tac_toe.Player", player, TICTACTOE_TYPE.PLAYER_O)
+
             const key = Object.keys(rooms)[0]
             rooms[key].players.push(player)
             const movetoGames = rooms[key]
