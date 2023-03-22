@@ -40,7 +40,6 @@ export class tictactoePvE {
             }
         }
         let randomIndex = Math.floor(Math.random() * emptyCells.length);
-        console.log('emptyCells[randomIndex]', emptyCells[randomIndex])
         return emptyCells[randomIndex];
     }
 
