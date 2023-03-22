@@ -13,12 +13,13 @@ import TictactoeRouter from "./tictactoe.route"
 import { Room, Player } from '../../../../games/tictactoe/interface';
 import { tictactoeGame } from "../../../../games/tictactoe/tictactoeGame";
 import { tictactoePvE } from "../../../../games/tictactoe/tictactoePvE";
-export const board: string[] = BOARD
+// export const board: string[] = BOARD
 export const games: Room = {}
 export const rooms: Room = {};
 export const PvERooms: Room = {}
 
 export default class WSRouter {
+
     private main = new tictactoePvE()
     private gameMain = new tictactoeGame()
     private queue: Player[] = []
@@ -105,7 +106,8 @@ export default class WSRouter {
                 "tic_tac_toe.Player"
             )
         );
-        console.log('dataAction', dataAction)
+        // const board: string[] = 
+        const board = JSON.parse(JSON.stringify(BOARD));
         if (dataAction.id) {
             games[dataAction.id] = { roomId: dataAction.id, ownerId: dataAction.id, players: [dataAction], board: board }
             this.gameMain.sendMessage(games[dataAction.id], this.filePath_tictactoe, "tic_tac_toe.startGame", dataAction, PACKAGE_HEADER.TICTACTOE_SEND_PLAYPvE)
@@ -138,6 +140,7 @@ export default class WSRouter {
         const player: Player = { id: Math.random().toString(36).substring(2), symbol: 'x', isTurn: true, wins: 0, lost: 0 };
         clients.set(player.id, this.socket);
         this.queue.push(player);
+        const board = JSON.parse(JSON.stringify(BOARD));
         if (Object.keys(rooms).length <= 0) {
             const gameId: string =
                 Math.random().toString(36).substr(2, 9);
