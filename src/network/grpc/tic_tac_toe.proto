@@ -42,5 +42,9 @@ message startGame {
   repeated Player players = 3;
   repeated string board = 4 ;
 }
+message endGame {
+  string roomId = 1;
+  Player player =2;
+}
 
 

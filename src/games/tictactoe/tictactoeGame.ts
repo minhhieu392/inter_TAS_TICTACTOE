@@ -1,5 +1,5 @@
 import { TICTACTOE_TYPE, PACKAGE_HEADER } from '../../utils/constants';
-import { DataAction, DataMove } from '../../games/tictactoe/interface';
+import { DataAction, DataEndGame, DataMove } from '../../games/tictactoe/interface';
 import { clients } from '../../config/websocket'
 import { games } from '../../server/routes/v1/websocket/index'
 import { WIN_STATES } from '../../utils/constants';
@@ -42,6 +42,7 @@ export class tictactoeGame {
      * @returns 
      */
     movesAction = (data: DataMove) => {
+        let checkStatus = false
         const listPlayer = games[data.roomId].players
         let isWinner = false;
         const curPlayer = data.player
@@ -53,12 +54,12 @@ export class tictactoeGame {
                 })
             })
             if (isWinner) {
+                checkStatus = true
                 this.makeMove(games[data.roomId], data)
                 const message = {
                     type: GAME_OVER_TYPE.ISWIN,
                     data: curPlayer.symbol,
                 }
-                const listPlayer = games[data.roomId].players
                 listPlayer.forEach(async (player: any) => {
                     if (clients.has(player.id)) {
                         this.sendMessage(message, this.filePath_tictactoe, "tic_tac_toe.sendWinStatus", player, PACKAGE_HEADER.TICTACTOE_WIN_STATUS)
@@ -83,6 +84,7 @@ export class tictactoeGame {
                     )
                 })
                 if (isDraw) {
+                    checkStatus = true
                     this.makeMove(games[data.roomId], data)
                     const message = {
                         type: GAME_OVER_TYPE.DRAW,
@@ -107,6 +109,31 @@ export class tictactoeGame {
             this.makeMove(games[data.roomId], data)
         }
         else console.log('err')
+        return checkStatus
+    }
+    /**
+     * Description : This function is used to send a message to the player in the room,
+     * informing the opponent has surrendered
+     * @param data 
+     */
+    endGame = async (data: DataEndGame) => {
+        const listPlayer = games[data.roomId].players
+        const curPlayer = data.player
+        const symbolWin = (curPlayer.symbol === 'x') ? 'o' : 'x';
+        this.makeMove(games[data.roomId], data)
+        const message = {
+            type: GAME_OVER_TYPE.ISSURRENDER,
+            data: symbolWin,
+        }
+        listPlayer.forEach(async (player: any) => {
+            if (clients.has(player.id)) {
+                this.sendMessage(message, this.filePath_tictactoe, "tic_tac_toe.sendWinStatus", player, PACKAGE_HEADER.TICTACTOE_WIN_STATUS)
+            }
+        })
+        delete games[data.roomId]
+        listPlayer.forEach((player) => {
+            clients.delete(player.id)
+        })
     }
     /**
      * Description : This function is used to send message to players in room.

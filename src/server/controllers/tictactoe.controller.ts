@@ -29,7 +29,9 @@ class TictactoeController {
                 return
             } else if (actionType === TICTACTOE_TYPE.ACTION) {
                 this.gameMain.movesAction(payload.dataMove)
-
+            }
+            else if (actionType === TICTACTOE_TYPE.END_GAME) {
+                this.gameMain.endGame(payload.dataEndGame)
             }
         } catch (error) {
             logger.error("[ERROR][Tictactoe][controller] - handleEvent - Error: ", error);

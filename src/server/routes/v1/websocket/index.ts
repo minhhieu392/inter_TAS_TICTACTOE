@@ -12,11 +12,14 @@ import { clients } from "../../../../config/websocket"
 import TictactoeRouter from "./tictactoe.route"
 import { Room, Player } from '../../../../games/tictactoe/interface';
 import { tictactoeGame } from "../../../../games/tictactoe/tictactoeGame";
+import { tictactoePvE } from "../../../../games/tictactoe/tictactoePvE";
 export const board: string[] = BOARD
 export const games: Room = {}
 export const rooms: Room = {};
+export const PvERooms: Room = {}
 
 export default class WSRouter {
+    private main = new tictactoePvE()
     private gameMain = new tictactoeGame()
     private queue: Player[] = []
     private socket: WebSocket;
@@ -80,7 +83,9 @@ export default class WSRouter {
         const caseHeader = {
             [PACKAGE_HEADER.FINDING_ROOM_TICTICTOE]: () => this.findingRoom(),
             [PACKAGE_HEADER.TICTACTOE_ACTION]: (payload: any) => this.tictactoeAction(payload),
-            [PACKAGE_HEADER.TICTACTOE_END_GAME]: () => this.tictactoeEndGame(),
+            [PACKAGE_HEADER.TICTACTOE_ACTION_PvE]: (payload: any) => this.tictactoeActionPvE(payload),
+            [PACKAGE_HEADER.TICTACTOE_PvE]: (payload: any) => this.tictactoePvE(payload),
+            [PACKAGE_HEADER.TICTACTOE_END_GAME]: (payload: any) => this.tictactoeEndGame(payload)
         }
         const headerKey = Object.keys(caseHeader).find(
             (key) => Number(key) === header
@@ -88,7 +93,40 @@ export default class WSRouter {
         caseHeader[headerKey] ?.(payload) ?? logger.error("can not find headerKey", header);
 
     };
+    /**
+     * Description :This is a function that handles make room for player-to-machine mode.
+     * @param payload 
+     */
+    private tictactoePvE = async (payload: any) => {
+        const [error2, dataAction] = await catchAsync(
+            decodeMessage(
+                payload,
+                this.filePath_tictactoe,
+                "tic_tac_toe.Player"
+            )
+        );
+        console.log('dataAction', dataAction)
+        if (dataAction.id) {
+            games[dataAction.id] = { roomId: dataAction.id, ownerId: dataAction.id, players: [dataAction], board: board }
+            this.gameMain.sendMessage(games[dataAction.id], this.filePath_tictactoe, "tic_tac_toe.startGame", dataAction, PACKAGE_HEADER.TICTACTOE_SEND_PLAYPvE)
+        }
+    }
+    /**
+     * Description : This is a function that handles the player's move.
+     * @param payload 
+     */
+    private tictactoeActionPvE = async (payload: any) => {
+        const [error2, dataAction] = await catchAsync(
+            decodeMessage(
+                payload,
+                this.filePath_tictactoe,
+                "tic_tac_toe.Action"
+            )
+        );
+        // this.main.minimax(payload.to, true)
+        this.main.markCell(dataAction);
 
+    }
     /**
      * Description : The above code is finding a room for the player. If there is no room, it creates a room and
      * sends the player to the room. If there is a room, it sends the player to the room. 
@@ -149,14 +187,21 @@ export default class WSRouter {
         }
     }
     /**
-     * Description: handler end game
+     * Description: handler end of the game
      * This is a function that handles the end of the game
      */
-    private tictactoeEndGame = async () => {
+    private tictactoeEndGame = async (payload: any) => {
+        const [error2, dataAction] = await catchAsync(
+            decodeMessage(
+                payload,
+                this.filePath_tictactoe,
+                "tic_tac_toe.endGame"
+            )
+        );
         const message = {
             type: TICTACTOE_TYPE.END_GAME,
+            data: dataAction
         };
-        console.log('end game', message)
 
         this.tictactoeRouter.router(message);
     }
@@ -173,6 +218,7 @@ export default class WSRouter {
     }
 
     /**
+     * Description : Function listenRooms
      * It checks if there are 2 players in the room, if there are, it clears the interval and deletes
      * the room. If there is only 1 player, it sets a timeout to delete the room after 30 seconds. If a
      * second player joins, it clears the timeout.
@@ -195,7 +241,7 @@ export default class WSRouter {
                     delete rooms[gameId];
                     clearInterval(intervalId);
                     isTimeoutSet = false;
-                }, 30000);
+                }, 10000);
                 isTimeoutSet = true;
             } else if (room.players.length === 2) {
                 if (isTimeoutSet) {
@@ -207,6 +253,6 @@ export default class WSRouter {
             }
         };
 
-        intervalId = setInterval(checkPlayers, 1000);
+        intervalId = setInterval(checkPlayers, 500);
     }
 }

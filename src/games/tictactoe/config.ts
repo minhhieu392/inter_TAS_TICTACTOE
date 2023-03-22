@@ -5,6 +5,7 @@ export enum GAME_OVER_TYPE {
     NONE = 3,
     ISWIN = 4,
     DRAW = 5,
+    ISSURRENDER = 6,
 }
 export const NUMBER_ROLL_SUBTRACT = 4;
 
