@@ -31,5 +31,11 @@ export interface DataMove {
 export interface PayloadHandleEvent {
     actionType: TICTACTOE_TYPE,
     data: DataAction | undefined,
-    dataMove: DataMove | undefined
+    dataMove: DataMove | undefined,
+    dataEndGame: DataEndGame | undefined
+}
+
+export interface DataEndGame {
+    roomId: string,
+    player: Player
 }

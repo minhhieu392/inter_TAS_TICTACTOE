@@ -27,6 +27,7 @@ class TictactoeRouter {
 
             let dataPlay = undefined;
             let dataMove = undefined;
+            let dataEndGame = undefined;
             if (type === TICTACTOE_TYPE.PLAY_GAME) {
                 const { roomId, ownerId, players, board } = message.payload
                 dataPlay = {
@@ -44,11 +45,20 @@ class TictactoeRouter {
                     to
                 }
             }
+            if (type === TICTACTOE_TYPE.END_GAME) {
+                const { roomId, player } = message.data
+
+                dataEndGame = {
+                    roomId,
+                    player
+                }
+            }
 
             let payload: PayloadHandleEvent = {
                 actionType: type,
                 data: dataPlay,
-                dataMove: dataMove
+                dataMove: dataMove,
+                dataEndGame: dataEndGame
             };
 
             this.controller.handleEvent(payload);

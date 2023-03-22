@@ -1,183 +1,184 @@
-import { encodeMessage, decodeMessage } from "../src/utils/helpers";
-import catchAsync from "../src/utils/catchAsync";
-const filePath_tictactoe = "src/network/grpc/tic_tac_toe.proto";
-const packageType_tnp = "hcGames.PackageData";
-const filePath_tmp = "src/network/grpc/package.proto";
-let clientId;
-let gameId;
-let isTurn = false;
-let yourSymbol;
-let socket;
-let board;
-let game;
+let gameBoard = ["", "", "", "", "", "", "", "", ""];
 
-const connectBtn = document.getElementById("connectBtn");
-const newGameBtn = document.getElementById("newGame");
-const currGames = document.getElementById("currGames");
-const joinGame = document.querySelector('button[type="submit"]');
-const cells = document.querySelectorAll("#cell");
-const gameBoard = document.querySelector("#board");
-const userCol = document.querySelector(".flex-col1");
+// Hàm để đánh dấu ô đã được chọn
+function markCell(index, symbol) {
+  gameBoard[index] = symbol;
+}
 
-connectBtn.addEventListener("click", () => {
-  console.log("okokoko");
-  socket = new WebSocket("ws://localhost:8080");
-  socket.onopen = function(event) {};
-  newGameBtn.addEventListener("click", () => {
-    const payloadData = {
-        userCodeId: "23f11630827f18e0781431534140465e_1677928900536",
-        ccData: {
-          miniGameEventId: 222,
-          token:
-            "create_token_c405a57714e888b441eefa2d8cf2b76b5c7285613d303ac8f2fb00499cc8941c",
-        },
-      };
-      const [errorDataEn, payloadDataEn] = await catchAsync(
-        encodeMessage(
-          payloadData,
-          "src/network/grpc/package.proto",
-          "hcGames.FindingRoom"
-        )
-      );
-      const message = {
-        header: 1,
-        data: payloadDataEn,
-      };
-      const [error, payloadEn] = await catchAsync(
-        encodeMessage(message, this.filePath_tmp, this.packageType_tnp)
-      );
-  
-      socket.send(JSON.stringify(payloadEn));
-  });
-
-  socket.onmessage = function(msg) {
-    const data = JSON.parse(msg.data);
-    switch (data.method) {
-      case "connect":
-        clientId = data.clientId;
-        userCol.innerHTML = `ClientId: ${clientId}`;
-        userCol.classList.add("joinLabel");
-        break;
-      case "create":
-        // inform you have successfully created the game and been added as player1
-        gameId = data.game.gameId;
-        yourSymbol = data.game.players[0].symbol;
-        console.log(`game id is ${gameId} and your symbol is ${yourSymbol}`);
-        cells.forEach((cell) => {
-          cell.classList.remove("x");
-          cell.classList.remove("cirlce");
-        });
-        break;
-
-      case "gamesAvail":
-        while (currGames.firstChild) {
-          currGames.removeChild(currGames.lastChild);
-        }
-        const games = data.games;
-        games.forEach((game) => {
-          const li = document.createElement("li");
-          li.addEventListener("click", selectGame);
-          li.innerText = game;
-          currGames.appendChild(li);
-        });
-        break;
-      case "join":
-        gameId = data.game.gameId;
-        yourSymbol = data.game.players[1].symbol;
-        console.log(`game id is ${gameId} and your symbol is ${yourSymbol}`);
-        cells.forEach((cell) => {
-          console.log(`cell classes are ${cell.classList}`);
-          cell.classList.remove("x");
-          cell.classList.remove("cirlce");
-        });
-        break;
-      case "updateBoard":
-        gameBoard.style.display = "grid";
-        console.log(`game updateBoard is ${data.game.board}`);
-        game = data.game;
-        console.log("game", game);
-        board = game.board;
-        const symbolClass = yourSymbol == "x" ? "x" : "circle";
-        gameBoard.classList.add(symbolClass);
-        index = 0;
-        cells.forEach((cell) => {
-          if (board[index] == "x") cell.classList.add("x");
-          else if (board[index] == "o") cell.classList.add("circle");
-          else cell.addEventListener("click", clickCell);
-          index++;
-        });
-
-        game.players.forEach((player) => {
-          if (player.clientId == +clientId && player.isTurn == true) {
-            isTurn = true;
-            console.log(`your turn`);
-          }
-        });
-        break;
-
-      case "gameEnds":
-        console.log(`Winner is ${data.winner}`);
-        window.alert(`Winner is ${data.winner}`);
-        break;
-      case "draw":
-        alert("Its a draw");
-        break;
+// Hàm để kiểm tra xem ai đã thắng
+function checkWinner() {
+  // Kiểm tra hàng ngang
+  for (let i = 0; i <= 6; i += 3) {
+    if (
+      gameBoard[i] !== "" &&
+      gameBoard[i] === gameBoard[i + 1] &&
+      gameBoard[i] === gameBoard[i + 2]
+    ) {
+      return gameBoard[i];
     }
-  };
-
-  socket.onclose = function(event) {};
-
-  socket.onerror = function(err) {};
-});
-
-function selectGame(src) {
-  gameId = +src.target.innerText;
-  joinGame.addEventListener("click", joingm, { once: true });
-}
-
-function joingm() {
-  const payLoad = {
-    method: "join",
-    clientId: clientId,
-    gameId: gameId,
-  };
-  socket.send(JSON.stringify(payLoad));
-}
-
-function clickCell(event) {
+  }
+  // Kiểm tra hàng dọc
+  for (let i = 0; i <= 2; i++) {
+    if (
+      gameBoard[i] !== "" &&
+      gameBoard[i] === gameBoard[i + 3] &&
+      gameBoard[i] === gameBoard[i + 6]
+    ) {
+      return gameBoard[i];
+    }
+  }
+  // Kiểm tra đường chéo
   if (
-    !isTurn ||
-    event.target.classList.contains("x") ||
-    event.target.classList.contains("circle")
-  )
-    return;
-
-  const cellclass = yourSymbol == "x" ? "x" : "circle";
-  event.target.classList.add(cellclass);
-
-  index = 0;
-  cells.forEach((cell) => {
-    if (cell.classList.contains("x")) board[index] = "x";
-    if (cell.classList.contains("circle")) board[index] = "o";
-    index++;
-  });
-  isTurn = false;
-  makeMove();
+    gameBoard[0] !== "" &&
+    gameBoard[0] === gameBoard[4] &&
+    gameBoard[0] === gameBoard[8]
+  ) {
+    return gameBoard[0];
+  }
+  if (
+    gameBoard[2] !== "" &&
+    gameBoard[2] === gameBoard[4] &&
+    gameBoard[2] === gameBoard[6]
+  ) {
+    return gameBoard[2];
+  }
+  // Kiểm tra xem bảng đã đầy chưa
+  if (!gameBoard.includes("")) {
+    return "draw";
+  }
+  // Nếu chưa ai thắng và bảng còn trống, trả về null
+  return null;
 }
 
-function makeMove() {
-  index = 0;
-  cells.forEach((cell) => {
-    if (cell.classList.contains("x")) game.board[index] == "x";
+// Hàm tính giá trị Minimax
+function minimax(depth, maximizingPlayer) {
+  // Kiểm tra xem trò chơi đã kết thúc chưa
+  let result = checkWinner();
+  if (result !== null) {
+    // Nếu trò chơi kết thúc, trả về giá trị tương ứng
+    if (result === "O") {
+      return 10 - depth;
+    } else if (result === "X") {
+      return depth - 10;
+    } else {
+      return 0;
+    }
+  }
 
-    if (cell.classList.contains("circle")) game.board[index] == "o";
-    index++;
+  if (maximizingPlayer) {
+    let bestScore = -Infinity;
+    let bestMove = null;
+    // Lặp lại tất cả các ô trống trên bảng
+    for (let i = 0; i < gameBoard.length; i++) {
+      if (gameBoard[i] === "") {
+        // Đánh O vào ô trống hiện tại
+        markCell(i, "O");
+        // Gọi đệ quy tính giá trị Minimax cho nước đi này
+        let score = minimax(depth + 1, false);
+        // Hủy đánh dấu ô hiện tại
+        markCell(i, "");
+        // Nếu giá trị Minimax cho nước đi này tốt hơn nước đi tốt nhất trước đó, lưu lại vị trí đó và giá trị Minimax
+        if (score > bestScore) {
+          bestScore = score;
+          bestMove = i;
+        }
+      }
+    }
+    // Nếu đây là lần đầu tiên gọi hàm Minimax (không phải đệ quy), trả về vị trí đánh O tốt nhất
+    if (depth === 0) {
+      return bestMove;
+    }
+    // Nếu không phải lần đầu tiên gọi hàm Minimax, trả về giá trị Minimax tốt nhất cho người chơi hiện tại
+    return bestScore;
+  } else {
+    let bestScore = Infinity;
+    // Lặp lại tất cả các ô trống trên bảng
+    for (let i = 0; i < gameBoard.length; i++) {
+      if (gameBoard[i] === "") {
+        // Đánh X vào ô trống hiện tại
+        markCell(i, "X");
+        // Gọi đệ quy tính giá trị Minimax cho nước đi này
+        let score = minimax(depth + 1, true);
+        // Hủy đánh dấu ô hiện tại
+        markCell(i, "");
+        // Nếu giá trị Minimax cho nước đi này tốt hơn nước đi tốt nhất trước đó, cập nhật giá trị Minimax
+        if (score < bestScore) {
+          bestScore = score;
+        }
+      }
+    }
+    // Trả về giá trị Minimax tốt nhất cho người chơi hiện tại
+    return bestScore;
+  }
+}
+
+// Hàm đánh O
+function playO() {
+  // Gọi hàm Minimax để tính vị trí đánh O tốt nhất
+  let index = minimax(0, true);
+  // Đánh O vào vị trí tính được
+  markCell(index, "O");
+  // Kiểm tra xem trò chơi đã kết thúc chưa
+  let result = checkWinner();
+  if (result !== null) {
+    // Nếu trò chơi kết thúc, hiển thị thông báo kết quả và hỏi người chơi có muốn chơi lại không
+    let message;
+    if (result === "O") {
+      message = "Bạn đã thắng!";
+    } else if (result === "X") {
+      message = "Bạn đã thua!";
+    } else {
+      message = "Hòa!";
+    }
+    // let playAgain = confirm(${message} Chơi lại?);
+    let playAgain;
+    if (playAgain) {
+      resetBoard();
+    }
+  }
+}
+
+// Hàm đánh X
+function playX(index) {
+  // Đánh X vào vị trí được chọn
+  markCell(index, "X");
+  // Kiểm tra xem trò chơi đã kết thúc chưa
+  let result = checkWinner();
+  if (result !== null) {
+    // Nếu trò chơi kết thúc, hiển thị thông báo kết quả và hỏi người chơi có muốn chơi lại không
+    let message;
+    if (result === "O") {
+      message = "Bạn đã thắng!";
+    } else if (result === "X") {
+      message = "Bạn đã thua!";
+    } else {
+      message = "Hòa!";
+    }
+    // let playAgain = confirm(${message} Chơi lại?);
+    let playAgain;
+    if (playAgain) {
+      resetBoard();
+    }
+  } else {
+    // Nếu trò chơi chưa kết thúc, đánh O
+    playO();
+  }
+}
+
+// Gán sự kiện click cho tất cả các ô trên bảng
+let cells = document.querySelectorAll(".cell");
+for (let i = 0; i < cells.length; i++) {
+  cells[i].addEventListener("click", function() {
+    if (gameBoard[i] === "") {
+      playX(i);
+    }
   });
-  cells.forEach((cell) => cell.removeEventListener("click", clickCell));
-  const payLoad = {
-    method: "makeMove",
-    game: game,
-  };
-  socket.send(JSON.stringify(payLoad));
-  console.log("payload", payLoad);
+}
+
+// Reset bảng
+function resetBoard() {
+  gameBoard = ["", "", "", "", "", "", "", "", ""];
+  for (let i = 0; i < cells.length; i++) {
+    cells[i].textContent = "";
+  }
 }

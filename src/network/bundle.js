@@ -63133,6 +63133,7 @@
         let socket;
         let board;
         let game;
+        let isPvE = false;
 
         const connectBtn = document.getElementById("connectBtn");
         const newGameBtn = document.getElementById("newGame");
@@ -63141,6 +63142,8 @@
         const cells = document.querySelectorAll(".cell");
         const gameBoard = document.querySelector("#board");
         const userCol = document.querySelector(".flex-col1");
+        const PvE = document.querySelector(".PvE");
+        const END = document.querySelector(".end");
 
         connectBtn.addEventListener("click", () => {
           socket = new WebSocket("ws://localhost:8080");
@@ -63165,8 +63168,57 @@
                 "hcGames.PackageData"
               )
             );
-            // console.log("payloadEn", payloadEn.toString());
-            // console.log("payloadDataEn", payloadDataEn);
+            socket.send(payloadEn);
+          });
+
+          END.addEventListener("click", async () => {
+            const payloadData = {
+              roomId: gameId,
+              player: clientId
+            };
+            const [errorDataEn, payloadDataEn] = await catchAsync(
+              encodeMessage(
+                payloadData,
+                "/src/network/grpc/tic_tac_toe.proto",
+                "tic_tac_toe.endGame"
+              )
+            );
+            const payload = {
+              header: 9000,
+              data: payloadDataEn,
+            };
+            const [error, payloadEn] = await catchAsync(
+              encodeMessage(
+                payload,
+                "/src/network/grpc/package.proto",
+                "hcGames.PackageData"
+              )
+            );
+
+            socket.send(payloadEn);
+          });
+
+          PvE.addEventListener("click", async () => {
+            const payloadData = clientId;
+            const [errorDataEn, payloadDataEn] = await catchAsync(
+              encodeMessage(
+                payloadData,
+                "/src/network/grpc/tic_tac_toe.proto",
+                "tic_tac_toe.Player"
+              )
+            );
+            const payload = {
+              header: 9005,
+              data: payloadDataEn,
+            };
+            const [error, payloadEn] = await catchAsync(
+              encodeMessage(
+                payload,
+                "/src/network/grpc/package.proto",
+                "hcGames.PackageData"
+              )
+            );
+
             socket.send(payloadEn);
           });
 
@@ -63184,7 +63236,28 @@
                 )
               );
               let test;
+              let li;
               switch (payloadEn.header) {
+                case 7004:
+                  if (payloadEn.header === 7004) isPvE = true;
+                  test = await catchAsync(
+                    decodeMessage(
+                      payloadEn.data,
+                      "/src/network/grpc/tic_tac_toe.proto",
+                      "tic_tac_toe.startGame"
+                    )
+                  );
+                  isTurn = clientId.isTurn;
+                  gameId = test[1].roomId;
+                  board = test[1].board;
+                  console.log("data", test);
+                  cells.forEach((cell) => {
+                    cell.addEventListener("click", clickCell);
+                  });
+                  li = document.createElement("li");
+                  li.innerText = gameId;
+                  currGames.appendChild(li);
+                  break;
                 case 7000:
                   test = await catchAsync(
                     decodeMessage(
@@ -63200,7 +63273,7 @@
                   cells.forEach((cell) => {
                     cell.addEventListener("click", clickCell);
                   });
-                  const li = document.createElement("li");
+                  li = document.createElement("li");
                   li.innerText = gameId;
                   currGames.appendChild(li);
                   break;
@@ -63278,11 +63351,26 @@
                   const res = test[1];
                   if (res.type === 4) {
                     if (res.data === yourSymbol)
-                      window.alert(`YOU WIN ${yourSymbol} ${clientId.id}`);
-                    else window.alert(`YOU LOST ${yourSymbol} ${clientId.id}`);
+                      window.alert(
+                        `YOU WIN \n ${yourSymbol} \n ${clientId.id}`
+                      );
+                    else
+                      window.alert(
+                        `YOU LOST \n ${yourSymbol} \n ${clientId.id}`
+                      );
                   }
                   if (res.type === 5) {
                     window.alert("XO DRAW!");
+                  }
+                  if (res.type === 6) {
+                    if (res.data === yourSymbol)
+                      window.alert(
+                        `YOU WIN \n ${yourSymbol} \n ${clientId.id} \n Your opponent has surrendered`
+                      );
+                    else
+                      window.alert(
+                        `YOU LOST \n ${yourSymbol} \n ${clientId.id}`
+                      );
                   }
                   break;
               }
@@ -63332,6 +63420,8 @@
         }
 
         async function makeMove(data) {
+          let header = 9003;
+          if (isPvE) header = 9004;
           let curIndex;
           index = 0;
           cells.forEach((cell) => {
@@ -63363,7 +63453,7 @@
             )
           );
           const dataSend = {
-            header: 9003,
+            header: header,
             data: payloadDataEn,
           };
           const [error, payloadEn] = await catchAsync(

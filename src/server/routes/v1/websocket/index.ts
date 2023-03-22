@@ -12,11 +12,15 @@ import { clients } from "../../../../config/websocket"
 import TictactoeRouter from "./tictactoe.route"
 import { Room, Player } from '../../../../games/tictactoe/interface';
 import { tictactoeGame } from "../../../../games/tictactoe/tictactoeGame";
-export const board: string[] = BOARD
+import { tictactoePvE } from "../../../../games/tictactoe/tictactoePvE";
+// export const board: string[] = BOARD
 export const games: Room = {}
 export const rooms: Room = {};
+export const PvERooms: Room = {}
 
 export default class WSRouter {
+
+    private main = new tictactoePvE()
     private gameMain = new tictactoeGame()
     private queue: Player[] = []
     private socket: WebSocket;
@@ -34,7 +38,7 @@ export default class WSRouter {
      */
     public listeners = () => {
         this.socket.on("message", async (payload) => {
-            console.log('check', payload)
+
             const [error, message] = await catchAsync(
                 decodeMessage(payload, this.filePath_tmp, this.packageType_tnp)
             );
@@ -80,7 +84,9 @@ export default class WSRouter {
         const caseHeader = {
             [PACKAGE_HEADER.FINDING_ROOM_TICTICTOE]: () => this.findingRoom(),
             [PACKAGE_HEADER.TICTACTOE_ACTION]: (payload: any) => this.tictactoeAction(payload),
-            [PACKAGE_HEADER.TICTACTOE_END_GAME]: () => this.tictactoeEndGame(),
+            [PACKAGE_HEADER.TICTACTOE_ACTION_PvE]: (payload: any) => this.tictactoeActionPvE(payload),
+            [PACKAGE_HEADER.TICTACTOE_PvE]: (payload: any) => this.tictactoePvE(payload),
+            [PACKAGE_HEADER.TICTACTOE_END_GAME]: (payload: any) => this.tictactoeEndGame(payload)
         }
         const headerKey = Object.keys(caseHeader).find(
             (key) => Number(key) === header
@@ -88,7 +94,41 @@ export default class WSRouter {
         caseHeader[headerKey] ?.(payload) ?? logger.error("can not find headerKey", header);
 
     };
+    /**
+     * Description :This is a function that handles make room for player-to-machine mode.
+     * @param payload 
+     */
+    private tictactoePvE = async (payload: any) => {
+        const [error2, dataAction] = await catchAsync(
+            decodeMessage(
+                payload,
+                this.filePath_tictactoe,
+                "tic_tac_toe.Player"
+            )
+        );
+        // const board: string[] = 
+        const board = JSON.parse(JSON.stringify(BOARD));
+        if (dataAction.id) {
+            games[dataAction.id] = { roomId: dataAction.id, ownerId: dataAction.id, players: [dataAction], board: board }
+            this.gameMain.sendMessage(games[dataAction.id], this.filePath_tictactoe, "tic_tac_toe.startGame", dataAction, PACKAGE_HEADER.TICTACTOE_SEND_PLAYPvE)
+        }
+    }
+    /**
+     * Description : This is a function that handles the player's move.
+     * @param payload 
+     */
+    private tictactoeActionPvE = async (payload: any) => {
+        const [error2, dataAction] = await catchAsync(
+            decodeMessage(
+                payload,
+                this.filePath_tictactoe,
+                "tic_tac_toe.Action"
+            )
+        );
+        // this.main.minimax(payload.to, true)
+        this.main.markCell(dataAction);
 
+    }
     /**
      * Description : The above code is finding a room for the player. If there is no room, it creates a room and
      * sends the player to the room. If there is a room, it sends the player to the room. 
@@ -100,10 +140,12 @@ export default class WSRouter {
         const player: Player = { id: Math.random().toString(36).substring(2), symbol: 'x', isTurn: true, wins: 0, lost: 0 };
         clients.set(player.id, this.socket);
         this.queue.push(player);
+        const board = JSON.parse(JSON.stringify(BOARD));
         if (Object.keys(rooms).length <= 0) {
             const gameId: string =
                 Math.random().toString(36).substr(2, 9);
             rooms[gameId] = { roomId: gameId, ownerId: player.id, players: [player], board: board }
+            this.listenRooms(gameId)
             this.removeFromQueue(player);
             this.gameMain.sendMessage(player, this.filePath_tictactoe, "tic_tac_toe.Player", player, TICTACTOE_TYPE.PLAYER_X)
         }
@@ -111,11 +153,10 @@ export default class WSRouter {
             player.symbol = 'o'
             player.isTurn = false
             this.gameMain.sendMessage(player, this.filePath_tictactoe, "tic_tac_toe.Player", player, TICTACTOE_TYPE.PLAYER_O)
-
             const key = Object.keys(rooms)[0]
             rooms[key].players.push(player)
             const movetoGames = rooms[key]
-            delete rooms[key]
+            // delete rooms[key]
             games[key] = movetoGames
             const message: any = {
                 type: TICTACTOE_TYPE.PLAY_GAME,
@@ -149,14 +190,21 @@ export default class WSRouter {
         }
     }
     /**
-     * Description: handler end game
+     * Description: handler end of the game
      * This is a function that handles the end of the game
      */
-    private tictactoeEndGame = async () => {
+    private tictactoeEndGame = async (payload: any) => {
+        const [error2, dataAction] = await catchAsync(
+            decodeMessage(
+                payload,
+                this.filePath_tictactoe,
+                "tic_tac_toe.endGame"
+            )
+        );
         const message = {
             type: TICTACTOE_TYPE.END_GAME,
+            data: dataAction
         };
-        console.log('end game', message)
 
         this.tictactoeRouter.router(message);
     }
@@ -170,5 +218,44 @@ export default class WSRouter {
         if (index !== -1) {
             this.queue.splice(index, 1);
         }
+    }
+
+    /**
+     * Description : Function listenRooms
+     * It checks if there are 2 players in the room, if there are, it clears the interval and deletes
+     * the room. If there is only 1 player, it sets a timeout to delete the room after 30 seconds. If a
+     * second player joins, it clears the timeout.
+     * 
+     * The problem is that the timeout is not being cleared. I've tried using a boolean to check if the
+     * timeout is set, but it doesn't seem to work.
+     * 
+     * I've also tried using a different method to clear the timeout, but it doesn't work either.
+     * @param {string} gameId - string - the id of the game
+     */
+    private listenRooms(gameId: string) {
+        const room = rooms[gameId];
+        let timeoutId: any;
+        let intervalId: any;
+        let isTimeoutSet = false;
+
+        const checkPlayers = () => {
+            if (room.players.length === 1 && !isTimeoutSet) {
+                timeoutId = setTimeout(() => {
+                    delete rooms[gameId];
+                    clearInterval(intervalId);
+                    isTimeoutSet = false;
+                }, 10000);
+                isTimeoutSet = true;
+            } else if (room.players.length === 2) {
+                if (isTimeoutSet) {
+                    clearTimeout(timeoutId);
+                    isTimeoutSet = false;
+                }
+                clearInterval(intervalId);
+                delete rooms[gameId];
+            }
+        };
+
+        intervalId = setInterval(checkPlayers, 500);
     }
 }

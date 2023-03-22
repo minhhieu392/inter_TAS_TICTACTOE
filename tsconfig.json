@@ -18,6 +18,6 @@
         "moduleResolution": "node",
         "typeRoots": ["src/server/types", "node_modules/@types"]
     },
-    "include": ["src/**/*.ts", "src/network/test_client.js"],
+    "include": ["src/**/*.ts", "src/network/test_client.js", "src/games/tictactoe/tictactoePvE.ts"],
     "exclude": ["dist", "node_modules"]
 }
