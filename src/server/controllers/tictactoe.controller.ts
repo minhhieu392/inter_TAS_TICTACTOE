@@ -33,6 +33,9 @@ class TictactoeController {
             else if (actionType === TICTACTOE_TYPE.END_GAME) {
                 this.gameMain.endGame(payload.dataEndGame)
             }
+            else if (actionType === TICTACTOE_TYPE.PvE) {
+                this.gameMain.createGame(payload.createPvE)
+            }
         } catch (error) {
             logger.error("[ERROR][Tictactoe][controller] - handleEvent - Error: ", error);
         }

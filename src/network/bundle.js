@@ -63144,17 +63144,19 @@
         const userCol = document.querySelector(".flex-col1");
         const PvE = document.querySelector(".PvE");
         const END = document.querySelector(".end");
-
+        let input = document.getElementById("myInput")  
         connectBtn.addEventListener("click", () => {
           socket = new WebSocket("ws://localhost:8080");
           socket.onopen = function(event) {};
           newGameBtn.addEventListener("click", async () => {
-            const payloadData = {};
+            const payloadData = {
+              userCodeId : input.value
+            };
             const [errorDataEn, payloadDataEn] = await catchAsync(
               encodeMessage(
                 payloadData,
                 "/src/network/grpc/package.proto",
-                "hcGames.FindingRoom"
+                "hcGames.FindRoomandCheckuser"
               )
             );
             const payload = {
@@ -63192,35 +63194,35 @@
                 payload,
                 "/src/network/grpc/package.proto",
                 "hcGames.PackageData"
-              )
+              )  
             );
 
             socket.send(payloadEn);
           });
 
-          PvE.addEventListener("click", async () => {
-            const payloadData = clientId;
-            const [errorDataEn, payloadDataEn] = await catchAsync(
-              encodeMessage(
-                payloadData,
-                "/src/network/grpc/tic_tac_toe.proto",
-                "tic_tac_toe.Player"
-              )
-            );
-            const payload = {
-              header: 9005,
-              data: payloadDataEn,
-            };
-            const [error, payloadEn] = await catchAsync(
-              encodeMessage(
-                payload,
-                "/src/network/grpc/package.proto",
-                "hcGames.PackageData"
-              )
-            );
+          // PvE.addEventListener("click", async () => {
+          //   const payloadData = clientId;
+          //   const [errorDataEn, payloadDataEn] = await catchAsync(
+          //     encodeMessage(
+          //       payloadData,
+          //       "/src/network/grpc/tic_tac_toe.proto",
+          //       "tic_tac_toe.Player"
+          //     )
+          //   );
+          //   const payload = {
+          //     header: 9005,
+          //     data: payloadDataEn,
+          //   };
+          //   const [error, payloadEn] = await catchAsync(
+          //     encodeMessage(
+          //       payload,
+          //       "/src/network/grpc/package.proto",
+          //       "hcGames.PackageData"
+          //     )
+          //   );
 
-            socket.send(payloadEn);
-          });
+          //   socket.send(payloadEn);
+          // });
 
           socket.onmessage = async function(msg) {
             const blob = msg.data;
@@ -63287,7 +63289,7 @@
                   );
                   clientId = test[1];
                   yourSymbol = test[1].symbol;
-                  userCol.innerHTML = clientId.id;
+                  userCol.innerHTML = clientId.name;
                   userCol.classList.add("joinLabel");
                   break;
                 case 31:
@@ -63300,7 +63302,7 @@
                   );
                   yourSymbol = test[1].symbol;
                   clientId = test[1];
-                  userCol.innerHTML = clientId.id;
+                  userCol.innerHTML = clientId.name;
                   userCol.classList.add("joinLabel");
                   // console.log("data", test);
 

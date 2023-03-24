@@ -1,6 +1,8 @@
 syntax = "proto3";
 package hcGames;
-
+message FindRoomandCheckuser {
+  string  userCodeId = 1;
+}
 message PackageData {
     uint32 header = 1;
     bytes data = 2;

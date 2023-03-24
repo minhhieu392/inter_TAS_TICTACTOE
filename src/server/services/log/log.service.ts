@@ -3,11 +3,11 @@ import { Game, Ledger } from 'server/models';
 import logger from '../../../config/logger';
 
 const saveCreateRoom = async (payload: Game) => {
-  try {
-    //return DBClient.instance.game.create({ data: payload });  
-  } catch (error) {
-    logger.error('[saveCreateRoom] Error:', error);
-  }
+    try {
+        //return DBClient.instance.game.create({ data: payload });  
+    } catch (error) {
+        logger.error('[saveCreateRoom] Error:', error);
+    }
 };
 
 /**
@@ -18,23 +18,23 @@ const saveCreateRoom = async (payload: Game) => {
  * @returns {*} 
  */
 const save = async (payload: Ledger) => {
-  try {
-    return DBClient.instance.ledger.create({ 
-      data: { 
-        logType: payload.logType, 
-        gameType: payload.gameType,
-        action: payload.action,
-        data: JSON.stringify(payload.data) 
-      }
-    });
-  } catch (error) {
-    logger.error('[save] Error:', error);
-  }
+    try {
+        // return DBClient.instance.ledger.create({ 
+        //   data: { 
+        //     logType: payload.logType, 
+        //     gameType: payload.gameType,
+        //     action: payload.action,
+        //     data: JSON.stringify(payload.data) 
+        //   }
+        // });
+    } catch (error) {
+        logger.error('[save] Error:', error);
+    }
 };
 
 const _ = {
-  saveCreateRoom,
-  save
+    saveCreateRoom,
+    save
 };
 
 export default _;

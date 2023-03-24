@@ -8,7 +8,7 @@ import app from './express';
 import { toArrayBuffer, encodeMessage, decodeMessage } from '../utils/helpers';
 import catchAsync from '../utils/catchAsync';
 
-export const clients = new Map<string, WebSocket>();;
+export const clients = new Map<number, WebSocket>();;
 
 export default class MyWebSocket {
     private server: Server;

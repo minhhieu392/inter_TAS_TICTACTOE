@@ -224,6 +224,7 @@ export enum TICTACTOE_TYPE {
     END_GAME = 5,
     PLAYER_X = 30,
     PLAYER_O = 31,
+    PvE = 32,
 }
 
 

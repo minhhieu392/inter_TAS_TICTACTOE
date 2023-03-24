@@ -15,15 +15,14 @@ export class tictactoePvE {
      * is invalid, then mark the cell with the computer's symbol.
      * @param payload 
      */
-    markCell(payload) {
+    async markCell(payload) {
         games[payload.roomId].board[payload.to] = payload.symbol;
-
-        const moveAction = this.gameMain.movesAction(payload)
-        if (!moveAction && !games[payload.roomId].players[0].isTurn) this.autoMarkO(payload)
+        const moveAction = await this.gameMain.movesAction(payload)
+        if (!moveAction && !games[payload.roomId] ?.players[0].isTurn) this.autoMarkO(payload)
     }
 
     private anyEmptyCell(payload) {
-        return games[payload.roomId].board.includes("");
+        return games[payload.roomId] ?.board.includes("");
     }
 
     /**

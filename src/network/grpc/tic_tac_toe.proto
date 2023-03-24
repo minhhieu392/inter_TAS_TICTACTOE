@@ -2,11 +2,11 @@ syntax = "proto3";
 package tic_tac_toe;
 
 message Player {
-  string id = 1;
-  string symbol = 2;
-  bool isTurn = 3;
-  int32 wins = 4;
-  int32 lost = 5;
+  int32 id = 1;
+  string name = 2;
+  string symbol = 3;
+  bool isTurn = 4;
+  int32 score = 5;
 }
 
 enum GameState {
@@ -38,9 +38,10 @@ message sendWinStatus {
 }
 message startGame {
   string roomId = 1;
-  string ownerId = 2;
+  int32 ownerId = 2;
   repeated Player players = 3;
   repeated string board = 4 ;
+  int32 gameType = 5;
 }
 message endGame {
   string roomId = 1;

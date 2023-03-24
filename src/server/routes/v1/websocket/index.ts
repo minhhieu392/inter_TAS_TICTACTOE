@@ -2,8 +2,8 @@ import { WebSocket } from "ws";
 import logger from "../../../../config/logger";
 import catchAsync from "../../../../utils/catchAsync";
 import { decodeMessage, encodeMessage } from "../../../../utils/helpers";
-const protobuf = require("protobufjs");
 import {
+    GAME_TYPE,
     PACKAGE_HEADER,
     TICTACTOE_TYPE,
     BOARD
@@ -13,11 +13,11 @@ import TictactoeRouter from "./tictactoe.route"
 import { Room, Player } from '../../../../games/tictactoe/interface';
 import { tictactoeGame } from "../../../../games/tictactoe/tictactoeGame";
 import { tictactoePvE } from "../../../../games/tictactoe/tictactoePvE";
-// export const board: string[] = BOARD
+import { findUser } from '../../../services/user.service';
+const { v4: uuidv4 } = require('uuid');
 export const games: Room = {}
 export const rooms: Room = {};
 export const PvERooms: Room = {}
-
 export default class WSRouter {
 
     private main = new tictactoePvE()
@@ -82,10 +82,9 @@ export default class WSRouter {
      */
     private handlers = async (header: Number, payload: any, rawData: any) => {
         const caseHeader = {
-            [PACKAGE_HEADER.FINDING_ROOM_TICTICTOE]: () => this.findingRoom(),
+            [PACKAGE_HEADER.FINDING_ROOM_TICTICTOE]: (payload: any) => this.findingRoom(payload),
             [PACKAGE_HEADER.TICTACTOE_ACTION]: (payload: any) => this.tictactoeAction(payload),
             [PACKAGE_HEADER.TICTACTOE_ACTION_PvE]: (payload: any) => this.tictactoeActionPvE(payload),
-            [PACKAGE_HEADER.TICTACTOE_PvE]: (payload: any) => this.tictactoePvE(payload),
             [PACKAGE_HEADER.TICTACTOE_END_GAME]: (payload: any) => this.tictactoeEndGame(payload)
         }
         const headerKey = Object.keys(caseHeader).find(
@@ -94,25 +93,7 @@ export default class WSRouter {
         caseHeader[headerKey] ?.(payload) ?? logger.error("can not find headerKey", header);
 
     };
-    /**
-     * Description :This is a function that handles make room for player-to-machine mode.
-     * @param payload 
-     */
-    private tictactoePvE = async (payload: any) => {
-        const [error2, dataAction] = await catchAsync(
-            decodeMessage(
-                payload,
-                this.filePath_tictactoe,
-                "tic_tac_toe.Player"
-            )
-        );
-        // const board: string[] = 
-        const board = JSON.parse(JSON.stringify(BOARD));
-        if (dataAction.id) {
-            games[dataAction.id] = { roomId: dataAction.id, ownerId: dataAction.id, players: [dataAction], board: board }
-            this.gameMain.sendMessage(games[dataAction.id], this.filePath_tictactoe, "tic_tac_toe.startGame", dataAction, PACKAGE_HEADER.TICTACTOE_SEND_PLAYPvE)
-        }
-    }
+
     /**
      * Description : This is a function that handles the player's move.
      * @param payload 
@@ -136,33 +117,42 @@ export default class WSRouter {
      * create new room
      * join room
      */
-    private findingRoom = async () => {
-        const player: Player = { id: Math.random().toString(36).substring(2), symbol: 'x', isTurn: true, wins: 0, lost: 0 };
+    private findingRoom = async (payload) => {
+        const [error2, dataAction] = await catchAsync(
+            decodeMessage(
+                payload,
+                this.filePath_tmp,
+                "hcGames.FindRoomandCheckuser"
+            )
+        );
+        const userPlayload = {
+            userCodeId: dataAction.userCodeId
+        }
+        const userCodeId = await this.checkUser(userPlayload)
+        const player: Player = { id: userCodeId.id, name: userCodeId.name, symbol: 'x', isTurn: true, score: 0 };
         clients.set(player.id, this.socket);
         this.queue.push(player);
         const board = JSON.parse(JSON.stringify(BOARD));
         if (Object.keys(rooms).length <= 0) {
-            const gameId: string =
-                Math.random().toString(36).substr(2, 9);
-            rooms[gameId] = { roomId: gameId, ownerId: player.id, players: [player], board: board }
+            const gameId: string = uuidv4()
+            rooms[gameId] = { roomId: gameId, ownerId: player.id, players: [player], board: board, gameType: GAME_TYPE.TICTACTOE }
             this.listenRooms(gameId)
             this.removeFromQueue(player);
             this.gameMain.sendMessage(player, this.filePath_tictactoe, "tic_tac_toe.Player", player, TICTACTOE_TYPE.PLAYER_X)
         }
         else {
             player.symbol = 'o'
-            player.isTurn = false
+                ; player.isTurn = false
             this.gameMain.sendMessage(player, this.filePath_tictactoe, "tic_tac_toe.Player", player, TICTACTOE_TYPE.PLAYER_O)
             const key = Object.keys(rooms)[0]
             rooms[key].players.push(player)
-            const movetoGames = rooms[key]
+            const gameInfo = rooms[key]
             // delete rooms[key]
-            games[key] = movetoGames
+            games[key] = gameInfo
             const message: any = {
                 type: TICTACTOE_TYPE.PLAY_GAME,
-                payload: movetoGames
+                payload: gameInfo
             }
-            console.log('games', games)
             this.tictactoeRouter.router(message);
         }
     }
@@ -240,11 +230,13 @@ export default class WSRouter {
 
         const checkPlayers = () => {
             if (room.players.length === 1 && !isTimeoutSet) {
-                timeoutId = setTimeout(() => {
+                timeoutId = setTimeout(async () => {
+                    const newGameAsync = JSON.parse(JSON.stringify(room));
+                    await this.asyncPlay(newGameAsync)
                     delete rooms[gameId];
                     clearInterval(intervalId);
                     isTimeoutSet = false;
-                }, 10000);
+                }, 5000);
                 isTimeoutSet = true;
             } else if (room.players.length === 2) {
                 if (isTimeoutSet) {
@@ -257,5 +249,39 @@ export default class WSRouter {
         };
 
         intervalId = setInterval(checkPlayers, 500);
+    }
+
+    private asyncPlay = async (payload: any) => {
+        if (payload.roomId) {
+            games[payload.roomId] = payload
+            const message = {
+                type: TICTACTOE_TYPE.PvE,
+                data: {
+                    roomId: payload.roomId,
+                    groupRoomId: payload.gameType,
+                    waitingTimeId: '',
+                    userId: payload.players[0].id,
+                    status: 2,
+                    bonusScore: 0,
+                    async: null
+                }
+            };
+            this.tictactoeRouter.router(message)
+            await this.gameMain.sendMessage(games[payload.roomId], this.filePath_tictactoe, "tic_tac_toe.startGame", payload.players[0], PACKAGE_HEADER.TICTACTOE_SEND_PLAYPvE)
+        }
+
+    }
+
+    private checkUser = async (payload: any) => {
+        try {
+            const userExists = await findUser({ name: payload.userCodeId })
+            if (!userExists) {
+                throw new Error("user not found");
+            }
+            return userExists
+        } catch (error) {
+            console.log(error)
+        }
+
     }
 }
