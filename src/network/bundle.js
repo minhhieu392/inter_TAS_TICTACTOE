@@ -63144,13 +63144,14 @@
         const userCol = document.querySelector(".flex-col1");
         const PvE = document.querySelector(".PvE");
         const END = document.querySelector(".end");
-        let input = document.getElementById("myInput")  
+        const RESET = document.querySelector(".reset");
+        let input = document.getElementById("myInput");
         connectBtn.addEventListener("click", () => {
           socket = new WebSocket("ws://localhost:8080");
           socket.onopen = function(event) {};
           newGameBtn.addEventListener("click", async () => {
             const payloadData = {
-              userCodeId : input.value
+              userCodeId: input.value,
             };
             const [errorDataEn, payloadDataEn] = await catchAsync(
               encodeMessage(
@@ -63176,7 +63177,7 @@
           END.addEventListener("click", async () => {
             const payloadData = {
               roomId: gameId,
-              player: clientId
+              player: clientId,
             };
             const [errorDataEn, payloadDataEn] = await catchAsync(
               encodeMessage(
@@ -63194,10 +63195,26 @@
                 payload,
                 "/src/network/grpc/package.proto",
                 "hcGames.PackageData"
-              )  
+              )
             );
 
             socket.send(payloadEn);
+          });
+          RESET.addEventListener("click", async () => {
+            console.log("reset");
+            clientId = "";
+            gameId = "";
+            isTurn = false;
+            game = "";
+            isPvE = false;
+            board = ["", "", "", "", "", "", "", "", ""];
+
+            index = 0;
+            cells.forEach((cell) => {
+              cell.classList.remove("x");
+              cell.classList.remove("o");
+              index++;
+            });
           });
 
           // PvE.addEventListener("click", async () => {

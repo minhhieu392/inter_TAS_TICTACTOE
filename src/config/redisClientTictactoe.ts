@@ -51,6 +51,9 @@ export const hget = async (
 export const hdel = async (key: string, field: string): Promise<void> => {
     await redisClient.hdel(key, field);
 };
+export const del = async (key: string) => {
+    await redisClient.del(key)
+}
 
 // Lấy tất cả các trường và giá trị trong hash
 export const hgetall = async (
@@ -79,4 +82,31 @@ export const hexists = async (
 export const scan = async (cursor: string, patternToken: "MATCH", pattern: string) => {
     return await redisClient.scan(cursor, patternToken, pattern)
 }
+
+export const zrangebyscore = async (key: string | Buffer, min: number | string, max: number | string, callback) => {
+    await redisClient.zrangebyscore(key, min, max, callback);
+
+    // if (callback.err) {
+    //     console.error(callback.err)
+    //     return
+    // }
+    // if (callback.result.length === 0) {
+    //     console.log('No records to delete')
+    //     return
+    // }
+    await redisClient.zremrangebyscore(key, min, max, callback);
+};
+
+export const zremrangebyscore = async (key: string | Buffer, min: number | string, max: number | string, callback) => {
+    return await redisClient.zremrangebyscore(key, min, max, callback);
+};
+export const keys = async (pattern: string): Promise<string[]> => {
+
+    return await redisClient.keys(pattern);
+};
+export const getKeyType = async (key: string) => {
+
+    return await redisClient.type(key);
+};
+
 

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Tic Tac Toe Layout</title>
+	<style>
+		.container {
+			display: flex;
+			flex-direction: row;
+			height: 100vh;
+		}
+		
+		.left {
+			flex-basis: 30%;
+			padding: 20px;
+			background-color: #ddd;
+		}
+		
+		.right {
+			flex-basis: 70%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			background-color: #eee;
+		}
+		
+		ul {
+			list-style: none;
+			padding: 0;
+			margin: 0 0 20px;
+		}
+		
+		button {
+			display: block;
+			width: 100%;
+			margin: 0 0 10px;
+			padding: 10px;
+			border: none;
+			background-color: #aaa;
+			color: #fff;
+			font-size: 16px;
+			cursor: pointer;
+		}
+		
+		input {
+			display: block;
+			width: 100%;
+			margin: 0 0 20px;
+			padding: 10px;
+			border: none;
+			border-radius: 5px;
+			font-size: 16px;
+		}
+		
+		.board {
+			display: grid;
+			grid-template-columns: repeat(3, 1fr);
+			grid-template-rows: repeat(3, 1fr);
+			gap: 10px;
+			padding: 10px;
+			background-color: #fff;
+			border-radius: 5px;
+		}
+		
+		.cell {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			background-color: #ccc;
+			color: #333;
+			font-size: 64px;
+			font-weight: bold;
+			cursor: pointer;
+			transition: all 0.2s ease-in-out;
+		}
+		
+		.cell:hover {
+			background-color: #ddd;
+		}
+		
+		.cell:active {
+			transform: scale(0.9);
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<div class="left">
+			<input type="text" placeholder="Type something...">
+			<button>Button 1</button>
+			<button>Button 2</button>
+			<button>Button 3</button>
+			<button>Button 4</button>
+			<ul>
+				<li></li>
+			</ul>
+		</div>
+		<div class="right">
+            <div class="gameStatus" id="gameStatus"></div>
+
+			<div class="board">
+                    <div class="cell" id="1"></div>
+                    <div class="cell" id="2"></div>
+                    <div class="cell" id="3"></div>
+                    <div class="cell" id="4"></div>
+                    <div class="cell" id="5"></div>
+                    <div class="cell" id="6"></div>
+                    <div class="cell" id="7"></div>
+                    <div class="cell" id="8"></div>
+		</div>
+	</div>
+</body>
+</html>

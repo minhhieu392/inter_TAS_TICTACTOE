@@ -23,7 +23,7 @@ model Game {
   updated_at DateTime? @updatedAt
   status Int
   bonusScore Int
-  async String? @unique @db.VarChar(255)
+  asyncRoom String?  @db.VarChar(255)
 
 }
 

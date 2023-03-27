@@ -47,7 +47,7 @@ export class tictactoeGame {
                     userId: player.id,
                     status: 0,
                     bonusScore: 0,
-                    async: null
+                    asyncRoom: null
                 }
                 await this.createGame(newGame)
             }
@@ -79,7 +79,6 @@ export class tictactoeGame {
                 const messageType = isWinner ? GAME_OVER_TYPE.ISWIN : GAME_OVER_TYPE.DRAW;
                 const messageData = isWinner ? curPlayer.symbol : 'draw';
                 await this.checkBonus(game, messageData)
-
                 await Promise.all(listPlayer.map(async (player: any) => {
                     const message = {
                         type: messageType,
@@ -92,7 +91,7 @@ export class tictactoeGame {
                             roomId: data.roomId,
                             status: 1,
                             score: player.score,
-                            async: null
+                            asyncRoom: null
                         }
                         await this.updateGame(updateGame)
                     }
@@ -140,6 +139,32 @@ export class tictactoeGame {
         const curPlayer = data.player;
         const symbolWin = (curPlayer.symbol === 'x') ? 'o' : 'x';
         await this.checkBonus(games[data.roomId], symbolWin)
+        await Promise.all(listPlayer.map(async (player: any) => {
+            const message = {
+                type: GAME_OVER_TYPE.ISWIN,
+                data: symbolWin,
+                score: player.score
+            };
+            if (listPlayer.length === 2) {
+                const updateGame = {
+                    userId: player.id,
+                    roomId: data.roomId,
+                    status: 1,
+                    score: player.score,
+                    asyncRoom: null
+                }
+                await this.updateGame(updateGame)
+            }
+            if (clients.has(player.id)) {
+
+                this.sendMessage(message, this.filePath_tictactoe, "tic_tac_toe.sendWinStatus", player, PACKAGE_HEADER.TICTACTOE_WIN_STATUS);
+            }
+        })
+        )
+        if (listPlayer.length === 1) {
+            const dataGame = JSON.parse(JSON.stringify(games[data.roomId]));
+            await this.gameResultRedis(dataGame)
+        }
         const message = {
             type: GAME_OVER_TYPE.ISSURRENDER,
             data: symbolWin,
@@ -208,23 +233,25 @@ export class tictactoeGame {
             gameType: (game.gameType).toString()
         }
         const checkAsyncPlayer = await this.findRecordWithin7DaysByGameType(dataCheckAsync)
-        console.log('checkAsyncPlayer', checkAsyncPlayer)
         if (checkAsyncPlayer) {
             let curScore = game.players[0].score;
             let otherScore = parseInt(checkAsyncPlayer.score);
             curScore === otherScore ? (curScore = 0, otherScore = 0) : curScore > otherScore ? (curScore = 10, otherScore = 0) : (curScore = 0, otherScore = 10);
             const asyncId = uuidv4();
             const matchAsyncs = []
-            matchAsyncs.push({ roomId: game.roomId, userId: game.players[0].id, score: curScore, async: asyncId })
-            matchAsyncs.push({ roomId: checkAsyncPlayer.roomId, userId: parseInt(checkAsyncPlayer.playerId), score: otherScore, async: asyncId })
-            await Promise.all(
-                matchAsyncs.map(async (matchAsync) => {
-                    console.log("matchAsync", matchAsync);
-                    await this.updateGame(matchAsync);
-                    await this.updatePlayerScore(matchAsync);
-                })
-            );
-
+            matchAsyncs.push({ roomId: game.roomId, userId: game.players[0].id, score: curScore, asyncRoom: asyncId })
+            matchAsyncs.push({ roomId: checkAsyncPlayer.roomId, userId: parseInt(checkAsyncPlayer.playerId), score: otherScore, asyncRoom: asyncId })
+            // await Promise.all(
+            //     matchAsyncs.map(async (matchAsync) => {
+            //         console.log("matchAsync", matchAsync);
+            //         await this.updateGame(matchAsync);
+            //         await this.updatePlayerScore(matchAsync);
+            //     })
+            // );
+            for (const matchAsync of matchAsyncs) {
+                await this.updateGame(matchAsync);
+                await this.updatePlayerScore(matchAsync);
+            }
             await deleteHash(checkAsyncPlayer.roomId)
         }
         else {
@@ -253,7 +280,7 @@ export class tictactoeGame {
                 status: data.status,
                 bonusScore: data.score,
                 updated_at: currentTime,
-                async: data.async
+                asyncRoom: data.asyncRoom
             })
             if (updateRoom) console.log('update ok', updateRoom)
         } catch (error) {
@@ -282,7 +309,7 @@ export class tictactoeGame {
                 userId: data.userId,
                 status: data.status,
                 bonusScore: data.bonusScore,
-                async: data.async
+                asyncRoom: data.asyncRoom
             })
         } catch (error) {
             console.log(error)

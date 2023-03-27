@@ -1,16 +1,16 @@
 *::before,
 *::after,
-* {
+/* * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     overflow: hidden;
-}
+} */
 
 :root {
-    --sidebar-width: 15%;
-    --primary-color: #000;
-  --secondary-color: #fff;
+    --sidebar-width: 30%;
+    --primary-color: #eee;
+  --secondary-color: #333131;
 }
 
 body {
@@ -19,35 +19,30 @@ body {
 
 
 .container {
-    width: 60vw;
-    height: 70vh;
-    background-color: white;
-    margin: auto;
-    display: grid;
-    grid-template-columns: var(--sidebar-width) 75%;
-    clear: both;
-    position: absolute;
-    top: 15%;
-    left: 20%;
-    box-shadow: 5px 10px 20px 10px #ffffff;
+    display: flex;
+			flex-direction: row;
+			height: 100vh;
 }
 
 .sidebar {
-    background-color: var(--primary-color);
-    display: flex;
-    flex-flow: column;
-    justify-content: center;
+    flex-basis: 30%;
+			padding: 20px;
+			background-color: #ddd;
 }
 
 .mainbar {
-    background-color: #000;
-    /* position: relative; */
+    /* background-color: #000; */
+    flex-basis: 70%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			background-color: #14bdac;
 }
 
 .board {
     position: relative;
     margin: auto;
-    margin-top: 10%;
+    /* margin-top: 15%; */
     grid-template-columns: repeat(3, auto);
     justify-content: center;
     align-content: center;
@@ -56,20 +51,10 @@ body {
 }
 
 .cell {
-    /* position: relative; */
-    /* display: table; */
-    /* width: 100px;
-    height: 100px;
-    border: 1px solid #006666;
-    align-items: center;
-    display: flex;
-    justify-content: center;
-    justify-items: center;
-    cursor: pointer; */
-    width: 100px;
-    height: 100px;
-    border: 3px solid #fefefe;
-    background: var(--primary-color);
+    width: 200px;
+    height: 200px;
+    border: 7px solid #989797;
+    background: #14bdac;
     color: var(--secondary-color);
     font-size: 4rem;
     display: flex;
@@ -80,6 +65,7 @@ body {
 .cell.x,
 .cell.o {
     cursor: not-allowed;
+    
 }
 
 .cell:first-child,
@@ -131,86 +117,97 @@ h1::after {
     width: 100vw;
 }
 
-.newGame,
+/* .newGame,
 .connectBtn {
     display: block;
-    /* width: 30%; */
     margin: 15px auto;
     height: 30px;
     color: white;
-    /* font-size: 1.3rem; */
     background-color: var(--primary-color);
-}
+} */
 
 .joinLabel {
     text-align: center;
-    display: block;
-    /* width: 30%; */
-    margin: 15px auto;
-    margin-bottom: 0px;
-    height: 30px;
-    color: white;
-    font-size: 0.7rem;
-    background-color: var(--primary-color);
-}
-
-.sidebar ul {
-    list-style: none;
-}
-
-.sidebar ul li {
-    /* display: block; */
-    /* width: 30%; */
     margin: 0 auto;
     padding: 5px;
     height: 30px;
-    /* color: white; */
-    font-size: 0.7rem;
+    font-size: 1.4rem;
     background-color: #dfecec;
 }
 
+.sidebar ul {
+    /* list-style: none; */
+    list-style: none;
+			padding: 0;
+			margin: 0 0 20px;
+}
+
+.sidebar ul li {
+    margin: 0 auto;
+    padding: 5px;
+    height: 30px;
+    /* font-size: 1.4rem; */
+    background-color: #dfecec;
+    text-align: center;
+
+}
+input {
+    display: block;
+    width: 96%;
+    margin: 0 0 20px;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+}
 .sidebar ul li:hover {
     background-color: #000000;
 }
 
-button[type='submit'] {
+button {
     display: block;
-    /* width: 30%; */
-    margin: 0 auto;
-    /* margin-top: 0x; */
-    height: 30px;
-    color: white;
-    font-size: 0.7rem;
-    background-color: var(--primary-color);
+			width: 100%;
+			margin: 0 0 10px;
+			padding: 10px;
+			border: none;
+			background-color: #aaa;
+			color: #fff;
+			font-size: 16px;
+			cursor: pointer;
 }
 
 .board.x .cell:not(.x):not(.o):hover::before,
 .cell.x::before {
+    margin-top: 10px;
+
     content: "";
     position: absolute;
-    height: 100px;
-    width: 5px;
-    background-color: #ffffff;
+    height: 180px;
+    width: 13px;
+    background-color: #3d3d3e;
     transform: rotate(45deg);
 }
 
 .board.x .cell:not(.x):not(.o):hover::after,
 .cell.x::after {
+    margin-top: 10px;
     content: "";
     position: absolute;
-    height: 100px;
-    width: 5px;
-    background-color: #ffffff;
+    height: 180px;
+    width: 13px;
+    background-color: #3d3d3e;
     transform: rotate(-45deg);
 }
 
 .board.o .cell:not(.x):not(.o):hover::before,
 .cell.o::before {
+    margin-top: 10px;
+
     content: '';
     position: absolute;
-    height: 90px;
-    width: 90px;
-    background-color: #ffffff;
+    height:160px;
+    width: 160px;
+    background-color: #fffffff3;
     /* transform: rotate(45deg); */
     border-radius: 50%;
     /* display: inline-block; */
@@ -218,18 +215,14 @@ button[type='submit'] {
 
 .board.o .cell:not(.x):not(.o):hover::after,
 .cell.o::after {
-    margin-top: 4px;
+    margin-top: 26.5px;
     content: "";
     position: absolute;
-    height: 82px;
-    width: 82px;
-    /* background-color: #94b8b8; */
-    background-color: #000000;
+    height: 128px;
+    width: 128px;
+    background-color: #14bdac;
     border-radius: 50%;
 }
-
-
-/* .board.o .cell:not(.x):not(.o):hover::after, */
 
 .board.o .cell:not(.x):not(.o):hover::before,
 .board.x .cell:not(.x):not(.o):hover::after,
