@@ -84,16 +84,6 @@ export const scan = async (cursor: string, patternToken: "MATCH", pattern: strin
 }
 
 export const zrangebyscore = async (key: string | Buffer, min: number | string, max: number | string, callback) => {
-    await redisClient.zrangebyscore(key, min, max, callback);
-
-    // if (callback.err) {
-    //     console.error(callback.err)
-    //     return
-    // }
-    // if (callback.result.length === 0) {
-    //     console.log('No records to delete')
-    //     return
-    // }
     await redisClient.zremrangebyscore(key, min, max, callback);
 };
 

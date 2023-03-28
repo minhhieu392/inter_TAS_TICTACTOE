@@ -28,6 +28,11 @@ export const clearUserFreeRouletteTurn = () => {
         logger.info(`[CLEAR USER FREE ROULETTE TURN FAILED]`, e);
     }
 }
+
+/**
+ * It deletes all keys that are hashes and have a field named "createdAt" whose value is older than 7
+ * days
+ */
 export const delUserInAsyncQueue = () => {
     try {
         cron.schedule('0 0 * * *', async () => {

@@ -227,6 +227,11 @@ export class tictactoeGame {
         });
         Promise.all(sendMessagePromises);
     }
+    /**
+     * Description : Checking if there is a game with the same gameType and userId within 7 days. If there is, it
+     * will update the score of the game. If not, it will create a new game.
+     * @param game 
+     */
     gameResultRedis = async (game: any) => {
         const dataCheckAsync = {
             userId: (game.players[0].id).toString(),
@@ -263,6 +268,11 @@ export class tictactoeGame {
             await hset(game.roomId, "createdAt", currentTime);
         }
     }
+    /**
+     * Description : Checking the bonus for each player in the game.
+     * @param game 
+     * @param winStatus 
+     */
     checkBonus = async (game: any, winStatus: string) => {
         game.players.forEach(async (player: any) => {
             if (winStatus === 'draw') player.score = player.score + 0
@@ -270,6 +280,10 @@ export class tictactoeGame {
             else player.score = player.score - 10
         })
     }
+    /**
+     * Description  : Updating the game status and score.
+     * @param data 
+     */
     updateGame = async (data: any) => {
         try {
             const currentTime = new Date()
@@ -287,6 +301,10 @@ export class tictactoeGame {
             console.log(error)
         }
     }
+    /**
+     * Description: Updating the score of a player.
+     * @param data 
+     */
     updatePlayerScore = async (data: any) => {
         try {
             const currentTime = new Date()
@@ -300,6 +318,10 @@ export class tictactoeGame {
             console.log(error)
         }
     }
+    /**
+     * Description: Creating a game
+     * @param data 
+     */
     createGame = async (data: any) => {
         try {
             await createPost({
@@ -315,6 +337,11 @@ export class tictactoeGame {
             console.log(error)
         }
     }
+    /**
+     * Description : A function that is used to find a record within 7 days by game type.
+     * @param data 
+     * @returns 
+     */
     findRecordWithin7DaysByGameType = async (data: any) => {
         let cursor = "0";
         let record: { key: string; createdAt: string } = { key: "", createdAt: new Date().toISOString() };

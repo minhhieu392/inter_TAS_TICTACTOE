@@ -141,8 +141,8 @@ export default class WSRouter {
             this.gameMain.sendMessage(player, this.filePath_tictactoe, "tic_tac_toe.Player", player, TICTACTOE_TYPE.PLAYER_X)
         }
         else {
-            player.symbol = 'o'
-                ; player.isTurn = false
+            player.symbol = 'o';
+            player.isTurn = false;
             this.gameMain.sendMessage(player, this.filePath_tictactoe, "tic_tac_toe.Player", player, TICTACTOE_TYPE.PLAYER_O)
             const key = Object.keys(rooms)[0]
             rooms[key].players.push(player)
@@ -250,7 +250,10 @@ export default class WSRouter {
 
         intervalId = setInterval(checkPlayers, 500);
     }
-
+    /**
+     * Description : This is a function that handles the player's move.
+     * @param payload 
+     */
     private asyncPlay = async (payload: any) => {
         if (payload.roomId) {
             games[payload.roomId] = payload
@@ -271,7 +274,11 @@ export default class WSRouter {
         }
 
     }
-
+    /**
+     * Description : Checking if the user exists.
+     * @param payload 
+     * @returns 
+     */
     private checkUser = async (payload: any) => {
         try {
             const userExists = await findUser({ name: payload.userCodeId })

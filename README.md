@@ -1,9 +1,22 @@
 
 
 ## Run app
+
 ```
+add file .env:
+DATABASE_PORT=6700
+POSTGRES_PASSWORD=password123
+POSTGRES_USER=postgres
+POSTGRES_DB=tictactoe_game
+POSTGRES_HOST=postgres
+POSTGRES_HOSTNAME=127.0.0.1
+DATABASE_URL="postgresql://postgres:password123@localhost:6700/tictactoe_game?schema=public"
+
+
+run docker compose up
 yarn install
-yarn local-test
+yarn local-tas
+run client.html
 ```
 
 ## Build number
