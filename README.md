@@ -1,4 +1,9 @@
-
+## Description:
+nhap username => findroom
+-neu tim thay nguoi choi phu hop => choi dong bo => matching 2 player => save info game into database => ket qua (thang/thua/hoa) => tinh diem => update diem cho nguoi choi => update game info
+-sau 5s (khong tim thay nguoi choi phu hop) => choi bat dong bo => save info game into database => ket qua (thang/thua/hoa) => tim kiem nguoi choi bat dong bo trong vong 7 ngay tinh tu thoi diem hien tai(co cung game type) => 
++ neu tim thay nguoi choi phu hop => so sanh ket qua 2 nguoi choi => tinh diem => update diem cho 2 nguoi choi => update game info => xoa nguoi choi khoi danh sach nguoi choi bat dong bo.
++ neu khong tim thay nguoi choi phu hop => save thong tin nguoi choi (user, game, score) vao danh sach nguoi choi bat dong bo
 
 ## Run app
 
@@ -13,9 +18,12 @@ POSTGRES_HOSTNAME=127.0.0.1
 DATABASE_URL="postgresql://postgres:password123@localhost:6700/tictactoe_game?schema=public"
 
 
-run docker compose up
+run docker-compose up -d
+
 yarn install
+
 yarn local-tas
+
 run client.html
 ```
 
