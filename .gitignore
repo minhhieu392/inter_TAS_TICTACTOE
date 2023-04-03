@@ -52,7 +52,7 @@ Thumbs.db
 api.json
 
 # Ignore .env file
-.env
+# .env
 
 .terraform
 .terraform.*
